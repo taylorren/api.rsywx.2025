@@ -6,8 +6,13 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class BookControllerTest extends WebTestCase
 {
+    private function printTestInfo(string $message): void
+    {
+        fwrite(STDERR, "\n[测试信息] $message\n");
+    }
     public function testGetSummary(): void
     {
+        $this->printTestInfo('开始测试 /books/summary 接口...');
         // 创建一个客户端来请求应用
         $client = static::createClient();
         
@@ -37,6 +42,7 @@ class BookControllerTest extends WebTestCase
     
     public function testGetBookDetail(): void
     {
+        $this->printTestInfo('开始测试 /books/detail/00001 接口（无评论的书籍）...');
         // 创建一个客户端来请求应用
         $client = static::createClient();
         
@@ -102,6 +108,7 @@ class BookControllerTest extends WebTestCase
     
     public function testGetBookDetailNotFound(): void
       {
+          $this->printTestInfo('开始测试不存在的书籍ID 12345...');
           // 创建一个客户端来请求应用
           $client = static::createClient();
           
@@ -117,4 +124,68 @@ class BookControllerTest extends WebTestCase
           // 断言响应内容包含预期的错误信息
           $this->assertStringContainsString('没有找到ID为12345的书籍', $responseContent);
       }
+      
+    public function testGetBookDetailWithReviews(): void
+    {
+        $this->printTestInfo('开始测试 /books/detail/00666 接口（有评论的书籍）...');
+        
+        // 创建一个客户端来请求应用
+        $client = static::createClient();
+        
+        // 使用一个有评论的书籍ID发送GET请求
+        $client->request('GET', '/books/detail/00666');
+        
+        // 断言HTTP状态码为200
+        $this->assertEquals(200, $client->getResponse()->getStatusCode());
+        
+        // 断言响应是JSON格式
+        $this->assertTrue($client->getResponse()->headers->contains('Content-Type', 'application/json'));
+        
+        // 获取响应内容并解码JSON
+        $responseContent = $client->getResponse()->getContent();
+        $responseData = json_decode($responseContent, true);
+        
+        // 断言JSON响应包含所有必要的字段
+        $this->assertArrayHasKey('id', $responseData);
+        $this->assertArrayHasKey('bookid', $responseData);
+        $this->assertArrayHasKey('title', $responseData);
+        $this->printTestInfo('基本书籍信息字段验证通过');
+        
+        // 断言新增字段存在
+        $this->assertArrayHasKey('total_visits', $responseData);
+        $this->assertArrayHasKey('last_visit', $responseData);
+        $this->assertArrayHasKey('tags', $responseData);
+        $this->assertArrayHasKey('headline', $responseData);
+        $this->assertArrayHasKey('reviews', $responseData);
+        $this->printTestInfo('扩展信息字段验证通过');
+        
+        // 断言bookid字段值与请求的bookid匹配
+        $this->assertEquals('00666', $responseData['bookid']);
+        
+        // 断言headline和reviews不为空
+        $this->assertNotEmpty($responseData['headline'], '书籍应该有评论标题');
+        $this->assertNotEmpty($responseData['reviews'], '书籍应该有评论内容');
+        $this->printTestInfo('评论数据验证通过');
+        
+        // 验证headline是字符串
+        $this->assertIsString($responseData['headline'], 'headline应该是字符串');
+        
+        // 验证reviews是数组
+        $this->assertIsArray($responseData['reviews'], 'reviews应该是数组');
+        
+        // 如果reviews不为空，验证其结构
+        if (!empty($responseData['reviews'])) {
+            // 获取第一个评论进行结构验证
+            $firstReview = $responseData['reviews'][0];
+            $this->printTestInfo('验证评论数据结构');
+            
+            // 根据实际的评论数据结构进行断言
+            $this->assertIsArray($firstReview, '评论应该是数组');
+            $this->assertArrayHasKey('title', $firstReview, '评论应包含title字段');
+            $this->assertArrayHasKey('date', $firstReview, '评论应包含date字段');
+            $this->assertArrayHasKey('uri', $firstReview, '评论应包含uri字段');
+            $this->assertArrayHasKey('feature', $firstReview, '评论应包含feature字段');
+        }
+        $this->printTestInfo('评论数据结构验证通过');
+    }
 }
