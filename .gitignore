@@ -10,3 +10,26 @@
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
+
+###> IDE and OS files ###
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
+###< IDE and OS files ###
+
+###> Database files ###
+*.sql
+*.sqlite
+###< Database files ###
+
+###> Log files ###
+/log/
+*.log
+###< Log files ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
+.env.test
