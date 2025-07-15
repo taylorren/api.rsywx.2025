@@ -188,4 +188,47 @@ class BookControllerTest extends WebTestCase
         }
         $this->printTestInfo('评论数据结构验证通过');
     }
+    
+    public function testGetLatestBook(): void
+    {
+        $this->printTestInfo('开始测试 /books/latest 接口...');
+        
+        // 创建一个客户端来请求应用
+        $client = static::createClient();
+        
+        // 发送GET请求到/books/latest端点
+        $client->request('GET', '/books/latest');
+        
+        // 断言HTTP状态码为200
+        $this->assertEquals(200, $client->getResponse()->getStatusCode());
+        
+        // 断言响应是JSON格式
+        $this->assertTrue($client->getResponse()->headers->contains('Content-Type', 'application/json'));
+        
+        // 获取响应内容并解码JSON
+        $responseContent = $client->getResponse()->getContent();
+        $responseData = json_decode($responseContent, true);
+        
+        // 断言JSON响应包含所有必要的字段
+        $this->assertArrayHasKey('title', $responseData);
+        $this->assertArrayHasKey('author', $responseData);
+        $this->assertArrayHasKey('cover', $responseData);
+        $this->assertArrayHasKey('purchdate', $responseData);
+        $this->printTestInfo('最新书籍字段验证通过');
+        
+        // 验证字段类型
+        $this->assertIsString($responseData['title'], 'title应该是字符串');
+        $this->assertIsString($responseData['author'], 'author应该是字符串');
+        $this->assertIsString($responseData['cover'], 'cover应该是字符串');
+        
+        // 验证cover URL格式
+        $this->assertStringContainsString('https://api.rsywx.com/covers/', $responseData['cover'], 'cover URL格式不正确');
+        
+        // 验证purchdate格式（如果不为null）
+        if ($responseData['purchdate'] !== null) {
+            $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $responseData['purchdate'], 'purchdate格式应为YYYY-MM-DD');
+        }
+        
+        $this->printTestInfo('最新书籍数据验证通过');
+    }
 }
