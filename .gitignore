@@ -11,6 +11,10 @@ cache/
 vendor/
 composer.lock
 
+# Testing
+coverage/
+.phpunit.result.cache
+
 # Logs
 *.log
 logs/

@@ -1,0 +1,694 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "RSYWX Library API",
+        "description": "A comprehensive API for managing your personal library collection. Access book details, collection statistics, and more.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api/v1",
+            "description": "API v1"
+        }
+    ],
+    "paths": {
+        "/books/status": {
+            "get": {
+                "tags": [
+                    "Collection Statistics"
+                ],
+                "summary": "藏书基本信息",
+                "description": "返回书籍总数、总页数、总千字数，以及总访问量",
+                "operationId": "eda8010d56730e27bd4a2418026d2982",
+                "parameters": [
+                    {
+                        "name": "refresh",
+                        "in": "query",
+                        "description": "Force refresh cache",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Collection status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_books": {
+                                                    "type": "integer",
+                                                    "example": 1820
+                                                },
+                                                "total_pages": {
+                                                    "type": "integer",
+                                                    "example": 724621
+                                                },
+                                                "total_kwords": {
+                                                    "type": "integer",
+                                                    "example": 483369
+                                                },
+                                                "total_visits": {
+                                                    "type": "integer",
+                                                    "example": 2514665
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "cached": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/books/{bookid}": {
+            "get": {
+                "tags": [
+                    "Book Details"
+                ],
+                "summary": "Get book details",
+                "description": "Returns detailed information for a specific book including metadata, tags, reviews, and visit statistics",
+                "operationId": "eee78a99101d90bfaf1a6b61f1cde759",
+                "parameters": [
+                    {
+                        "name": "bookid",
+                        "in": "path",
+                        "description": "Book ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "00666"
+                        }
+                    },
+                    {
+                        "name": "refresh",
+                        "in": "query",
+                        "description": "Force refresh cache",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Book details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 666
+                                                },
+                                                "bookid": {
+                                                    "type": "string",
+                                                    "example": "00666"
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "隐形的城市"
+                                                },
+                                                "author": {
+                                                    "type": "string",
+                                                    "example": "卡尔维诺"
+                                                },
+                                                "publisher_name": {
+                                                    "type": "string",
+                                                    "example": "花城出版社"
+                                                },
+                                                "place_name": {
+                                                    "type": "string",
+                                                    "example": "上海"
+                                                },
+                                                "tags": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "意大利",
+                                                        "散文",
+                                                        "文学",
+                                                        "经典"
+                                                    ]
+                                                },
+                                                "reviews": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "cover_uri": {
+                                                    "type": "string",
+                                                    "example": "https://api.rsywx.com/covers/00666.jpg"
+                                                },
+                                                "total_visits": {
+                                                    "type": "integer",
+                                                    "example": 4843
+                                                },
+                                                "last_visited": {
+                                                    "type": "string",
+                                                    "example": "2025-07-27 07:29:57"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "cached": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Book not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Book not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/books/latest/{count}": {
+            "get": {
+                "tags": [
+                    "Book Lists"
+                ],
+                "summary": "Get latest purchased books",
+                "description": "Returns the most recently purchased books, ordered by purchase date (newest first)",
+                "operationId": "2d0d1d01b2ee495d9fbd3994c25136f1",
+                "parameters": [
+                    {
+                        "name": "count",
+                        "in": "path",
+                        "description": "Number of books to return (defaults to 1)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "example": 5
+                        }
+                    },
+                    {
+                        "name": "refresh",
+                        "in": "query",
+                        "description": "Force refresh cache",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Latest purchased books",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 2083
+                                                    },
+                                                    "bookid": {
+                                                        "type": "string",
+                                                        "example": "02083"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "维吉尔之死"
+                                                    },
+                                                    "author": {
+                                                        "type": "string",
+                                                        "example": "布洛赫"
+                                                    },
+                                                    "publisher_name": {
+                                                        "type": "string",
+                                                        "example": "译林出版社"
+                                                    },
+                                                    "place_name": {
+                                                        "type": "string",
+                                                        "example": "苏州"
+                                                    },
+                                                    "purchdate": {
+                                                        "type": "string",
+                                                        "example": "2025-07-07"
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "example": 88
+                                                    },
+                                                    "cover_uri": {
+                                                        "type": "string",
+                                                        "example": "https://api.rsywx.com/covers/02083.jpg"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "cached": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/books/random/{count}": {
+            "get": {
+                "tags": [
+                    "Book Lists"
+                ],
+                "summary": "Get random books",
+                "description": "Returns a random selection of books from your library collection",
+                "operationId": "816a08e34ed727b560f0a4c29af55962",
+                "parameters": [
+                    {
+                        "name": "count",
+                        "in": "path",
+                        "description": "Number of random books to return (defaults to 1)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 50,
+                            "minimum": 1,
+                            "example": 5
+                        }
+                    },
+                    {
+                        "name": "refresh",
+                        "in": "query",
+                        "description": "Force refresh cache",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Random books from collection",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1234
+                                                    },
+                                                    "bookid": {
+                                                        "type": "string",
+                                                        "example": "01234"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "随机书籍标题"
+                                                    },
+                                                    "author": {
+                                                        "type": "string",
+                                                        "example": "作者姓名"
+                                                    },
+                                                    "publisher_name": {
+                                                        "type": "string",
+                                                        "example": "出版社名称"
+                                                    },
+                                                    "place_name": {
+                                                        "type": "string",
+                                                        "example": "出版地"
+                                                    },
+                                                    "cover_uri": {
+                                                        "type": "string",
+                                                        "example": "https://api.rsywx.com/covers/01234.jpg"
+                                                    },
+                                                    "total_visits": {
+                                                        "type": "integer",
+                                                        "example": 123
+                                                    },
+                                                    "last_visited": {
+                                                        "type": "string",
+                                                        "example": "2025-07-27 10:30:00"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "cached": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/books/last_visited/{count}": {
+            "get": {
+                "tags": [
+                    "Book Lists"
+                ],
+                "summary": "Get recently visited books",
+                "description": "Returns books ordered by most recent visit time (most recently visited first)",
+                "operationId": "5a1e5ce68db1e2fca755b3ab4d37f4b3",
+                "parameters": [
+                    {
+                        "name": "count",
+                        "in": "path",
+                        "description": "Number of recently visited books to return (defaults to 1)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 50,
+                            "minimum": 1,
+                            "example": 5
+                        }
+                    },
+                    {
+                        "name": "refresh",
+                        "in": "query",
+                        "description": "Force refresh cache",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recently visited books",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1234
+                                                    },
+                                                    "bookid": {
+                                                        "type": "string",
+                                                        "example": "01234"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "最近访问的书籍"
+                                                    },
+                                                    "author": {
+                                                        "type": "string",
+                                                        "example": "作者姓名"
+                                                    },
+                                                    "cover_uri": {
+                                                        "type": "string",
+                                                        "example": "https://api.rsywx.com/covers/01234.jpg"
+                                                    },
+                                                    "last_visited": {
+                                                        "type": "string",
+                                                        "example": "2025-07-27 12:30:00"
+                                                    },
+                                                    "region": {
+                                                        "description": "Region where the book was accessed",
+                                                        "type": "string",
+                                                        "example": "home"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "cached": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/books/forgotten/{count}": {
+            "get": {
+                "tags": [
+                    "Book Lists"
+                ],
+                "summary": "Get forgotten books",
+                "description": "Returns books that haven't been visited for a long time, ordered by oldest visit first (most forgotten first)",
+                "operationId": "13e3c95b358d9c1db7070ee0ff432124",
+                "parameters": [
+                    {
+                        "name": "count",
+                        "in": "path",
+                        "description": "Number of forgotten books to return (defaults to 1)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 50,
+                            "minimum": 1,
+                            "example": 5
+                        }
+                    },
+                    {
+                        "name": "refresh",
+                        "in": "query",
+                        "description": "Force refresh cache",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Forgotten books (not visited recently)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1234
+                                                    },
+                                                    "bookid": {
+                                                        "type": "string",
+                                                        "example": "01234"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "被遗忘的书籍"
+                                                    },
+                                                    "author": {
+                                                        "type": "string",
+                                                        "example": "作者姓名"
+                                                    },
+                                                    "cover_uri": {
+                                                        "type": "string",
+                                                        "example": "https://api.rsywx.com/covers/01234.jpg"
+                                                    },
+                                                    "last_visited": {
+                                                        "type": "string",
+                                                        "example": "2024-01-15 10:30:00"
+                                                    },
+                                                    "days_since_visit": {
+                                                        "description": "Number of days since last visit",
+                                                        "type": "integer",
+                                                        "example": 180
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "cached": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/health": {
+            "get": {
+                "tags": [
+                    "System"
+                ],
+                "summary": "Health check",
+                "description": "Check if the API is running and accessible",
+                "operationId": "b47610414074fd57bd075b89cbcdcdf0",
+                "responses": {
+                    "200": {
+                        "description": "API is healthy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "API is running"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "example": "2025-07-27 10:30:00"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "ApiKeyAuth": {
+                "type": "apiKey",
+                "description": "API key required for authentication",
+                "name": "X-API-Key",
+                "in": "header"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Collection Statistics",
+            "description": "Collection Statistics"
+        },
+        {
+            "name": "Book Details",
+            "description": "Book Details"
+        },
+        {
+            "name": "Book Lists",
+            "description": "Book Lists"
+        },
+        {
+            "name": "System",
+            "description": "System"
+        }
+    ]
+}

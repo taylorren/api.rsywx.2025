@@ -10,6 +10,10 @@ A PHP + Slim Framework API for personal library management system.
 - **API Key Authentication** - Secure access control
 - **Apache Integration** - Ready for production deployment
 
+## API Documentation
+
+Visit the root URL (`/`) to access the interactive API documentation with detailed endpoint specifications, request/response examples, and data models.
+
 ## API Endpoints
 
 ### Collection Status
@@ -30,7 +34,7 @@ Returns detailed book information including:
 - Visit statistics (real-time)
 
 ### Authentication
-All endpoints (except `/health`) require API key authentication via:
+All endpoints (except `/health` and `/`) require API key authentication via:
 - Header: `X-API-Key: your-api-key`
 - Query parameter: `?api_key=your-api-key`
 

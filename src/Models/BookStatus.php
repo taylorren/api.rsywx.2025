@@ -3,19 +3,19 @@
 namespace App\Models;
 
 use App\Database\Connection;
-use App\Cache\FileCache;
+use App\Cache\MemoryCache;
 
 class BookStatus
 {
-    private $db;
-    private $cache;
-    private $cacheKey = 'book_collection_status';
-    private $cacheTtl = 86400; // 24 hours
+    protected $db;
+    protected $cache;
+    protected $cacheKey = 'book_collection_status';
+    protected $cacheTtl = 86400; // 24 hours
 
     public function __construct()
     {
         $this->db = Connection::getInstance()->getConnection();
-        $this->cache = new FileCache();
+        $this->cache = new MemoryCache();
     }
 
     public function getCollectionStatus($forceRefresh = false)

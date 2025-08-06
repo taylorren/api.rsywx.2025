@@ -1,4 +1,5 @@
 <?php
+
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
@@ -24,41 +25,83 @@ $errorMiddleware = $app->addErrorMiddleware(
     true
 );
 
+// Add performance timing middleware (development only)
+if ($_ENV['APP_ENV'] === 'development') {
+    $app->add(function (Request $request, $handler) {
+        $start = microtime(true);
+        $response = $handler->handle($request);
+        $duration = round((microtime(true) - $start) * 1000, 2);
+
+        return $response->withHeader('X-Response-Time', $duration . 'ms');
+    });
+}
+
 // Add CORS middleware
 $app->add(function (Request $request, $handler) {
+    // Handle preflight OPTIONS request
+    if ($request->getMethod() === 'OPTIONS') {
+        $response = new \Slim\Psr7\Response();
+        return $response
+            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-API-Key')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->withHeader('Access-Control-Max-Age', '86400')
+            ->withHeader('X-Debug-Origin', $request->getHeaderLine('Origin') ?: 'no-origin')
+            ->withHeader('X-Debug-Host', $request->getHeaderLine('Host') ?: 'no-host')
+            ->withStatus(200);
+    }
+
     $response = $handler->handle($request);
-    return $response
+
+    // Preserve existing headers (like X-Response-Time) and add CORS headers
+    $existingHeaders = $response->getHeaders();
+    $corsResponse = $response
         ->withHeader('Access-Control-Allow-Origin', '*')
         ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-API-Key')
-        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-});
+        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->withHeader('Access-Control-Max-Age', '86400');
 
-// Handle preflight requests
-$app->options('/{routes:.+}', function (Request $request, Response $response) {
-    return $response;
+    // Ensure X-Response-Time is preserved if it exists
+    if (isset($existingHeaders['X-Response-Time'])) {
+        $corsResponse = $corsResponse->withHeader('X-Response-Time', $existingHeaders['X-Response-Time'][0]);
+    }
+
+    return $corsResponse;
 });
 
 // API Key middleware
 $app->add(function (Request $request, $handler) {
     $uri = $request->getUri()->getPath();
-    
-    // Skip auth for health check
-    if ($uri === '/health') {
+
+    // Skip auth for documentation, health check, static files, and OPTIONS requests
+    if ($uri === '/' || $uri === '/health' || strpos($uri, '/api-docs') === 0 || $request->getMethod() === 'OPTIONS') {
         return $handler->handle($request);
     }
-    
+
     $apiKey = $request->getHeaderLine('X-API-Key') ?: $request->getQueryParams()['api_key'] ?? null;
-    
+
     if (!$apiKey || $apiKey !== $_ENV['API_KEY']) {
         $response = new \Slim\Psr7\Response();
         $response->getBody()->write(json_encode([
             'success' => false,
             'message' => 'Invalid or missing API key'
         ]));
-        return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+        return $response
+            ->withStatus(401)
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-API-Key')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     }
-    
+
     return $handler->handle($request);
+});
+
+// API Documentation (no auth required)
+$app->get('/', function (Request $request, Response $response) {
+    $html = file_get_contents(__DIR__ . '/api-docs.html');
+    $response->getBody()->write($html);
+    return $response->withHeader('Content-Type', 'text/html');
 });
 
 // Health check endpoint (no auth required)
@@ -74,6 +117,10 @@ $app->get('/health', function (Request $request, Response $response) {
 // API routes
 $app->group('/api/' . $_ENV['API_VERSION'], function ($group) {
     $group->get('/books/status', \App\Controllers\BookController::class . ':status');
+    $group->get('/books/latest[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':latest');
+    $group->get('/books/random[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':random');
+    $group->get('/books/last_visited[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':lastVisited');
+    $group->get('/books/forgotten[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':forgotten');
     $group->get('/books/{bookid}', \App\Controllers\BookController::class . ':show');
 });
 
