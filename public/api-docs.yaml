@@ -377,6 +377,27 @@ paths:
       security:
         -
           ApiKeyAuth: []
+  /misc/wotd:
+    get:
+      tags:
+        - Miscellaneous
+      summary: 'Get Word of the Day'
+      description: 'Returns a random word of the day with its meaning, example sentence, and word type'
+      operationId: febbda92051d9162570d97ecfac0cec3
+      responses:
+        '200':
+          description: 'Word of the Day'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { properties: { id: { type: integer, example: 15 }, word: { type: string, example: serendipity }, meaning: { type: string, example: 'The occurrence of events by chance in a happy way' }, sentence: { type: string, example: 'It was pure serendipity that led me to discover this amazing book.' }, type: { type: string, example: noun } }, type: object }
+                  cached: { type: boolean, example: true }
+                type: object
+      security:
+        -
+          ApiKeyAuth: []
   /health:
     get:
       tags:
@@ -412,6 +433,9 @@ tags:
   -
     name: 'Book Lists'
     description: 'Book Lists'
+  -
+    name: Miscellaneous
+    description: Miscellaneous
   -
     name: System
     description: System

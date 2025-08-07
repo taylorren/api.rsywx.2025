@@ -116,6 +116,7 @@ $app->get('/health', function (Request $request, Response $response) {
 
 // API routes
 $app->group('/api/' . $_ENV['API_VERSION'], function ($group) {
+    // Book endpoints
     $group->get('/books/status', \App\Controllers\BookController::class . ':status');
     $group->get('/books/latest[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':latest');
     $group->get('/books/random[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':random');
@@ -125,6 +126,10 @@ $app->group('/api/' . $_ENV['API_VERSION'], function ($group) {
     $group->get('/books/today', \App\Controllers\BookController::class . ':today');
     $group->get('/books/visit_history', \App\Controllers\BookController::class . ':visitHistory');
     $group->get('/books/{bookid}', \App\Controllers\BookController::class . ':show');
+    
+    // Miscellaneous endpoints
+    $group->get('/misc/wotd', \App\Controllers\MiscController::class . ':wordOfTheDay');
+    $group->get('/misc/qotd', \App\Controllers\MiscController::class . ':qotd');
 });
 
 $app->run();
