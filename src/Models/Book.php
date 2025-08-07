@@ -372,10 +372,12 @@ class Book
 
     private function fetchForgottenBooksFromDb($count)
     {
+        // Simplified approach: Get the books with oldest "most recent visits"
+        // This is more straightforward than the complex nested query
         $query = "
             SELECT b.id, b.bookid, b.title, b.author,
-                   oldest_visits.last_visited,
-                   DATEDIFF(NOW(), oldest_visits.last_visited) as days_since_visit
+                   forgotten_visits.last_visited,
+                   DATEDIFF(NOW(), forgotten_visits.last_visited) as days_since_visit
             FROM book_book b 
             INNER JOIN (
                 SELECT v.bookid, MAX(v.visitwhen) as last_visited
@@ -385,8 +387,8 @@ class Book
                 GROUP BY v.bookid
                 ORDER BY last_visited ASC 
                 LIMIT ?
-            ) oldest_visits ON b.id = oldest_visits.bookid
-            ORDER BY oldest_visits.last_visited ASC
+            ) forgotten_visits ON b.id = forgotten_visits.bookid
+            ORDER BY forgotten_visits.last_visited ASC
         ";
 
         $stmt = $this->db->prepare($query);
@@ -411,5 +413,90 @@ class Book
 
         // For Symfony Cache, we can't easily iterate over keys, so clear all cache
         return $this->cache->clear();
+    }
+
+    public function getTodaysBooks($month = null, $date = null, $forceRefresh = false)
+    {
+        // Default to today's date if not provided
+        $month = $month ?? (int)date('n');
+        $date = $date ?? (int)date('j');
+        $currentYear = date('Y');
+
+        // Format month and date with leading zeros for consistency
+        $monthDay = sprintf('%02d-%02d', $month, $date);
+        $requestedDate = sprintf('%04d-%02d-%02d', $currentYear, $month, $date);
+        $todayMonthDay = date('m-d');
+        $isToday = ($monthDay === $todayMonthDay);
+
+        $cacheKey = "todays_books_{$monthDay}";
+
+        // Today's books can be cached for a full day since they only change once per day
+        $todaysCacheTtl = 86400; // 24 hours
+
+        // Get cached data
+        $booksData = null;
+        if (!$forceRefresh) {
+            $booksData = $this->cache->get($cacheKey);
+        }
+
+        $fromCache = ($booksData !== null);
+
+        // If not cached, fetch from database
+        if ($booksData === null) {
+            $booksData = $this->fetchTodaysBooksFromDb($monthDay, $currentYear);
+
+            // Cache the result with full day TTL
+            $this->cache->set($cacheKey, $booksData, $todaysCacheTtl);
+        }
+
+        return [
+            'data' => $booksData,
+            'from_cache' => $fromCache,
+            'date_info' => [
+                'requested_date' => $requestedDate,
+                'month_day' => $monthDay,
+                'is_today' => $isToday
+            ]
+        ];
+    }
+
+    private function fetchTodaysBooksFromDb($monthDay, $currentYear)
+    {
+        $query = "
+            SELECT b.id, b.bookid, b.title, b.author, b.purchdate, b.price,
+                   p.name as place_name, 
+                   pub.name as publisher_name,
+                   YEAR(b.purchdate) as purchase_year,
+                   (? - YEAR(b.purchdate)) as years_ago
+            FROM book_book b
+            LEFT JOIN book_place p ON b.place = p.id
+            LEFT JOIN book_publisher pub ON b.publisher = pub.id
+            WHERE b.location NOT IN ('na', '--')
+              AND DATE_FORMAT(b.purchdate, '%m-%d') = ?
+              AND YEAR(b.purchdate) < ?
+            ORDER BY b.purchdate DESC
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$currentYear, $monthDay, $currentYear]);
+        $books = $stmt->fetchAll();
+
+        // Add cover URI to each book
+        foreach ($books as &$book) {
+            $book['cover_uri'] = "https://api.rsywx.com/covers/{$book['bookid']}.jpg";
+            $book['years_ago'] = (int)$book['years_ago'];
+
+            // Remove the temporary purchase_year field
+            unset($book['purchase_year']);
+        }
+
+        return $books;
+    }
+
+    public function clearTodaysBooksCache()
+    {
+        $monthDay = date('m-d');
+        $cacheKey = "todays_books_{$monthDay}";
+        return $this->cache->delete($cacheKey);
     }
 }

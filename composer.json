@@ -28,7 +28,6 @@
     "scripts": {
         "start": "php -S localhost:8000 -t public",
         "docs": "php generate-docs.php",
-        "docs:generate": "php generate-docs.php",
         "test": "phpunit",
         "test-unit": "phpunit --testsuite=\"Unit Tests\"",
         "test-integration": "phpunit --testsuite=\"Integration Tests\"",

@@ -45,7 +45,7 @@ abstract class BaseTestCase extends TestCase
             return $response
                 ->withHeader('Access-Control-Allow-Origin', '*')
                 ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-API-Key')
-                ->withHeader('Access-Control-Allow-Methods', 'GET, POST');
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
         });
 
         // API Key middleware
@@ -88,6 +88,11 @@ abstract class BaseTestCase extends TestCase
         $this->app->group('/api/' . ($_ENV['API_VERSION'] ?? 'v1'), function ($group) {
             $group->get('/books/status', \App\Controllers\BookController::class . ':status');
             $group->get('/books/latest[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':latest');
+            $group->get('/books/random[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':random');
+            $group->get('/books/last_visited[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':lastVisited');
+            $group->get('/books/forgotten[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':forgotten');
+            $group->get('/books/today/{month:[0-9]+}/{date:[0-9]+}', \App\Controllers\BookController::class . ':todayWithParams');
+            $group->get('/books/today', \App\Controllers\BookController::class . ':today');
             $group->get('/books/{bookid}', \App\Controllers\BookController::class . ':show');
         });
     }

@@ -511,4 +511,219 @@ class BookController
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
+
+    #[OA\Get(
+        path: "/books/today/{month}/{date}",
+        summary: "Get books for specific date",
+        description: "Returns books purchased on a specific date in previous years (excluding current year) - like 'on this day in history' for your book collection.",
+        tags: ["Book Lists"],
+        security: [["ApiKeyAuth" => []]]
+    )]
+    #[OA\Parameter(
+        name: "month",
+        in: "path",
+        description: "Month (1-12)",
+        required: true,
+        schema: new OA\Schema(type: "integer", minimum: 1, maximum: 12, example: 8)
+    )]
+    #[OA\Parameter(
+        name: "date",
+        in: "path",
+        description: "Day of month (1-31)",
+        required: true,
+        schema: new OA\Schema(type: "integer", minimum: 1, maximum: 31, example: 7)
+    )]
+    #[OA\Parameter(
+        name: "refresh",
+        in: "query",
+        description: "Force refresh cache",
+        required: false,
+        schema: new OA\Schema(type: "boolean", example: false)
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Books purchased on the specified date in previous years",
+        content: new OA\JsonContent(
+            properties: [
+                "success" => new OA\Property(property: "success", type: "boolean", example: true),
+                "data" => new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(
+                        type: "object",
+                        properties: [
+                            "id" => new OA\Property(property: "id", type: "integer", example: 1234),
+                            "bookid" => new OA\Property(property: "bookid", type: "string", example: "01234"),
+                            "title" => new OA\Property(property: "title", type: "string", example: "历史书籍"),
+                            "author" => new OA\Property(property: "author", type: "string", example: "作者姓名"),
+                            "publisher_name" => new OA\Property(property: "publisher_name", type: "string", example: "出版社名称"),
+                            "place_name" => new OA\Property(property: "place_name", type: "string", example: "购买地点"),
+                            "purchdate" => new OA\Property(property: "purchdate", type: "string", example: "2020-08-07"),
+                            "price" => new OA\Property(property: "price", type: "number", example: 25.50),
+                            "cover_uri" => new OA\Property(property: "cover_uri", type: "string", example: "https://api.rsywx.com/covers/01234.jpg"),
+                            "years_ago" => new OA\Property(property: "years_ago", type: "integer", example: 5, description: "How many years ago this book was purchased")
+                        ]
+                    )
+                ),
+                "cached" => new OA\Property(property: "cached", type: "boolean", example: true),
+                "date_info" => new OA\Property(
+                    property: "date_info",
+                    type: "object",
+                    properties: [
+                        "requested_date" => new OA\Property(property: "requested_date", type: "string", example: "2025-08-07"),
+                        "month_day" => new OA\Property(property: "month_day", type: "string", example: "08-07"),
+                        "is_today" => new OA\Property(property: "is_today", type: "boolean", example: true)
+                    ]
+                )
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 400,
+        description: "Invalid date parameters",
+        content: new OA\JsonContent(
+            properties: [
+                "success" => new OA\Property(property: "success", type: "boolean", example: false),
+                "message" => new OA\Property(property: "message", type: "string", example: "Invalid date: month must be 1-12, date must be 1-31")
+            ]
+        )
+    )]
+    public function todayWithParams(Request $request, Response $response, $args)
+    {
+        try {
+            $queryParams = $request->getQueryParams();
+            $forceRefresh = isset($queryParams['refresh']) && $queryParams['refresh'] === 'true';
+            
+            // Get month and date from route parameters
+            $month = (int)$args['month'];
+            $date = (int)$args['date'];
+            
+            // Validate parameters
+            if ($month < 1 || $month > 12 || $date < 1 || $date > 31) {
+                $errorData = [
+                    'success' => false,
+                    'message' => 'Invalid date: month must be 1-12, date must be 1-31'
+                ];
+                $response->getBody()->write(json_encode($errorData));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            
+            // Check if the date is valid using a leap year (2020) to allow Feb 29
+            // Since we're looking for books from previous years, Feb 29 is valid in leap years
+            if (!checkdate($month, $date, 2020)) {
+                $errorData = [
+                    'success' => false,
+                    'message' => 'Invalid date: the specified month and date combination does not exist'
+                ];
+                $response->getBody()->write(json_encode($errorData));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            
+            $bookModel = new \App\Models\Book();
+            $result = $bookModel->getTodaysBooks($month, $date, $forceRefresh);
+            
+            $data = [
+                'success' => true,
+                'data' => $result['data'],
+                'cached' => $result['from_cache'],
+                'date_info' => $result['date_info']
+            ];
+            
+            $response->getBody()->write(json_encode($data));
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $errorData = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            
+            $response->getBody()->write(json_encode($errorData));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    #[OA\Get(
+        path: "/books/today",
+        summary: "Get today's books",
+        description: "Returns books purchased on today's date in previous years (excluding current year) - like 'on this day in history' for your book collection.",
+        tags: ["Book Lists"],
+        security: [["ApiKeyAuth" => []]]
+    )]
+    #[OA\Parameter(
+        name: "refresh",
+        in: "query",
+        description: "Force refresh cache",
+        required: false,
+        schema: new OA\Schema(type: "boolean", example: false)
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Books purchased on today's date in previous years",
+        content: new OA\JsonContent(
+            properties: [
+                "success" => new OA\Property(property: "success", type: "boolean", example: true),
+                "data" => new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(
+                        type: "object",
+                        properties: [
+                            "id" => new OA\Property(property: "id", type: "integer", example: 1234),
+                            "bookid" => new OA\Property(property: "bookid", type: "string", example: "01234"),
+                            "title" => new OA\Property(property: "title", type: "string", example: "今日历史书籍"),
+                            "author" => new OA\Property(property: "author", type: "string", example: "作者姓名"),
+                            "publisher_name" => new OA\Property(property: "publisher_name", type: "string", example: "出版社名称"),
+                            "place_name" => new OA\Property(property: "place_name", type: "string", example: "购买地点"),
+                            "purchdate" => new OA\Property(property: "purchdate", type: "string", example: "2020-08-07"),
+                            "price" => new OA\Property(property: "price", type: "number", example: 25.50),
+                            "cover_uri" => new OA\Property(property: "cover_uri", type: "string", example: "https://api.rsywx.com/covers/01234.jpg"),
+                            "years_ago" => new OA\Property(property: "years_ago", type: "integer", example: 5, description: "How many years ago this book was purchased")
+                        ]
+                    )
+                ),
+                "cached" => new OA\Property(property: "cached", type: "boolean", example: true),
+                "date_info" => new OA\Property(
+                    property: "date_info",
+                    type: "object",
+                    properties: [
+                        "requested_date" => new OA\Property(property: "requested_date", type: "string", example: "2025-08-07"),
+                        "month_day" => new OA\Property(property: "month_day", type: "string", example: "08-07"),
+                        "is_today" => new OA\Property(property: "is_today", type: "boolean", example: true)
+                    ]
+                )
+            ]
+        )
+    )]
+    public function today(Request $request, Response $response)
+    {
+        try {
+            $queryParams = $request->getQueryParams();
+            $forceRefresh = isset($queryParams['refresh']) && $queryParams['refresh'] === 'true';
+            
+            // Use today's date
+            $month = (int)date('n');
+            $date = (int)date('j');
+            
+            $bookModel = new \App\Models\Book();
+            $result = $bookModel->getTodaysBooks($month, $date, $forceRefresh);
+            
+            $data = [
+                'success' => true,
+                'data' => $result['data'],
+                'cached' => $result['from_cache'],
+                'date_info' => $result['date_info']
+            ];
+            
+            $response->getBody()->write(json_encode($data));
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $errorData = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            
+            $response->getBody()->write(json_encode($errorData));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
 }

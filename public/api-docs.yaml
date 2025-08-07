@@ -245,6 +245,97 @@ paths:
       security:
         -
           ApiKeyAuth: []
+  '/books/today/{month}/{date}':
+    get:
+      tags:
+        - 'Book Lists'
+      summary: 'Get books for specific date'
+      description: "Returns books purchased on a specific date in previous years (excluding current year) - like 'on this day in history' for your book collection."
+      operationId: 163237a209f4927b55e63dd4229db85f
+      parameters:
+        -
+          name: month
+          in: path
+          description: 'Month (1-12)'
+          required: true
+          schema:
+            type: integer
+            maximum: 12
+            minimum: 1
+            example: 8
+        -
+          name: date
+          in: path
+          description: 'Day of month (1-31)'
+          required: true
+          schema:
+            type: integer
+            maximum: 31
+            minimum: 1
+            example: 7
+        -
+          name: refresh
+          in: query
+          description: 'Force refresh cache'
+          required: false
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: 'Books purchased on the specified date in previous years'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { type: array, items: { properties: { id: { type: integer, example: 1234 }, bookid: { type: string, example: '01234' }, title: { type: string, example: 历史书籍 }, author: { type: string, example: 作者姓名 }, publisher_name: { type: string, example: 出版社名称 }, place_name: { type: string, example: 购买地点 }, purchdate: { type: string, example: '2020-08-07' }, price: { type: number, example: 25.5 }, cover_uri: { type: string, example: 'https://api.rsywx.com/covers/01234.jpg' }, years_ago: { description: 'How many years ago this book was purchased', type: integer, example: 5 } }, type: object } }
+                  cached: { type: boolean, example: true }
+                  date_info: { properties: { requested_date: { type: string, example: '2025-08-07' }, month_day: { type: string, example: 08-07 }, is_today: { type: boolean, example: true } }, type: object }
+                type: object
+        '400':
+          description: 'Invalid date parameters'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success: { type: boolean, example: false }
+                  message: { type: string, example: 'Invalid date: month must be 1-12, date must be 1-31' }
+                type: object
+      security:
+        -
+          ApiKeyAuth: []
+  /books/today:
+    get:
+      tags:
+        - 'Book Lists'
+      summary: "Get today's books"
+      description: "Returns books purchased on today's date in previous years (excluding current year) - like 'on this day in history' for your book collection."
+      operationId: 4d0c23e27a9bcb6ee76c86e53571e085
+      parameters:
+        -
+          name: refresh
+          in: query
+          description: 'Force refresh cache'
+          required: false
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: "Books purchased on today's date in previous years"
+          content:
+            application/json:
+              schema:
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { type: array, items: { properties: { id: { type: integer, example: 1234 }, bookid: { type: string, example: '01234' }, title: { type: string, example: 今日历史书籍 }, author: { type: string, example: 作者姓名 }, publisher_name: { type: string, example: 出版社名称 }, place_name: { type: string, example: 购买地点 }, purchdate: { type: string, example: '2020-08-07' }, price: { type: number, example: 25.5 }, cover_uri: { type: string, example: 'https://api.rsywx.com/covers/01234.jpg' }, years_ago: { description: 'How many years ago this book was purchased', type: integer, example: 5 } }, type: object } }
+                  cached: { type: boolean, example: true }
+                  date_info: { properties: { requested_date: { type: string, example: '2025-08-07' }, month_day: { type: string, example: 08-07 }, is_today: { type: boolean, example: true } }, type: object }
+                type: object
+      security:
+        -
+          ApiKeyAuth: []
   /health:
     get:
       tags:

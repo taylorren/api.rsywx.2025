@@ -121,6 +121,8 @@ $app->group('/api/' . $_ENV['API_VERSION'], function ($group) {
     $group->get('/books/random[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':random');
     $group->get('/books/last_visited[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':lastVisited');
     $group->get('/books/forgotten[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':forgotten');
+    $group->get('/books/today/{month:[0-9]+}/{date:[0-9]+}', \App\Controllers\BookController::class . ':todayWithParams');
+    $group->get('/books/today', \App\Controllers\BookController::class . ':today');
     $group->get('/books/{bookid}', \App\Controllers\BookController::class . ':show');
 });
 
