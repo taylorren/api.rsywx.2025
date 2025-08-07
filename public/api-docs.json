@@ -717,6 +717,11 @@
                                                         "type": "number",
                                                         "example": 25.5
                                                     },
+                                                    "location": {
+                                                        "description": "Physical location/shelf code where the book is stored",
+                                                        "type": "string",
+                                                        "example": "f3"
+                                                    },
                                                     "cover_uri": {
                                                         "type": "string",
                                                         "example": "https://api.rsywx.com/covers/01234.jpg"
@@ -851,6 +856,11 @@
                                                     "price": {
                                                         "type": "number",
                                                         "example": 25.5
+                                                    },
+                                                    "location": {
+                                                        "description": "Physical location/shelf code where the book is stored",
+                                                        "type": "string",
+                                                        "example": "f3"
                                                     },
                                                     "cover_uri": {
                                                         "type": "string",

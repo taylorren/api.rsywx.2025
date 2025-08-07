@@ -369,7 +369,7 @@ class Book
             'from_cache' => $fromCache
         ];
     }
-
+    // TODO: Based on SQL performance analysis, maybe we should add a new filed in Book_Book to capture its latest visit date as a redundancy and quick SQL
     private function fetchForgottenBooksFromDb($count)
     {
         // Simplified approach: Get the books with oldest "most recent visits"
@@ -463,7 +463,7 @@ class Book
     private function fetchTodaysBooksFromDb($monthDay, $currentYear)
     {
         $query = "
-            SELECT b.id, b.bookid, b.title, b.author, b.purchdate, b.price,
+            SELECT b.id, b.bookid, b.title, b.author, b.purchdate, b.price, b.location,
                    p.name as place_name, 
                    pub.name as publisher_name,
                    YEAR(b.purchdate) as purchase_year,

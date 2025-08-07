@@ -560,6 +560,7 @@ class BookController
                             "place_name" => new OA\Property(property: "place_name", type: "string", example: "购买地点"),
                             "purchdate" => new OA\Property(property: "purchdate", type: "string", example: "2020-08-07"),
                             "price" => new OA\Property(property: "price", type: "number", example: 25.50),
+                            "location" => new OA\Property(property: "location", type: "string", example: "f3", description: "Physical location/shelf code where the book is stored"),
                             "cover_uri" => new OA\Property(property: "cover_uri", type: "string", example: "https://api.rsywx.com/covers/01234.jpg"),
                             "years_ago" => new OA\Property(property: "years_ago", type: "integer", example: 5, description: "How many years ago this book was purchased")
                         ]
@@ -676,6 +677,7 @@ class BookController
                             "place_name" => new OA\Property(property: "place_name", type: "string", example: "购买地点"),
                             "purchdate" => new OA\Property(property: "purchdate", type: "string", example: "2020-08-07"),
                             "price" => new OA\Property(property: "price", type: "number", example: 25.50),
+                            "location" => new OA\Property(property: "location", type: "string", example: "f3", description: "Physical location/shelf code where the book is stored"),
                             "cover_uri" => new OA\Property(property: "cover_uri", type: "string", example: "https://api.rsywx.com/covers/01234.jpg"),
                             "years_ago" => new OA\Property(property: "years_ago", type: "integer", example: 5, description: "How many years ago this book was purchased")
                         ]

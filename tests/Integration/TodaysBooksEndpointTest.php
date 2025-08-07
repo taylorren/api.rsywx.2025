@@ -52,6 +52,7 @@ class TodaysBooksEndpointTest extends BaseTestCase
                 $this->assertArrayHasKey('place_name', $book);
                 $this->assertArrayHasKey('purchdate', $book);
                 $this->assertArrayHasKey('price', $book);
+                $this->assertArrayHasKey('location', $book);
                 $this->assertArrayHasKey('cover_uri', $book);
                 $this->assertArrayHasKey('years_ago', $book);
 
@@ -60,6 +61,7 @@ class TodaysBooksEndpointTest extends BaseTestCase
                 $this->assertIsString($book['bookid']);
                 $this->assertIsString($book['title']);
                 $this->assertIsString($book['author']);
+                $this->assertIsString($book['location']);
                 $this->assertIsString($book['cover_uri']);
                 $this->assertIsInt($book['years_ago']);
                 $this->assertGreaterThan(0, $book['years_ago']); // Should be from previous years
