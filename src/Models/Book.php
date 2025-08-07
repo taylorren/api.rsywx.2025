@@ -499,4 +499,114 @@ class Book
         $cacheKey = "todays_books_{$monthDay}";
         return $this->cache->delete($cacheKey);
     }
+
+    public function getVisitHistory($days = 30, $forceRefresh = false)
+    {
+        $cacheKey = "visit_history_{$days}";
+
+        // Visit history can be cached for a few hours since it's for trend analysis
+        $visitHistoryCacheTtl = 3600; // 1 hour
+
+        // Get cached data
+        $historyData = null;
+        if (!$forceRefresh) {
+            $historyData = $this->cache->get($cacheKey);
+        }
+
+        $fromCache = ($historyData !== null);
+
+        // If not cached, fetch from database
+        if ($historyData === null) {
+            $historyData = $this->fetchVisitHistoryFromDb($days);
+
+            // Cache the result
+            $this->cache->set($cacheKey, $historyData, $visitHistoryCacheTtl);
+        }
+
+        return [
+            'data' => $historyData['daily_counts'],
+            'from_cache' => $fromCache,
+            'period_info' => $historyData['period_info']
+        ];
+    }
+
+    private function fetchVisitHistoryFromDb($days)
+    {
+        $endDate = date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime("-{$days} days"));
+
+        $query = "
+            SELECT 
+                DATE(visitwhen) as visit_date,
+                COUNT(*) as visit_count
+            FROM book_visit
+            WHERE DATE(visitwhen) >= ?
+              AND DATE(visitwhen) <= ?
+            GROUP BY DATE(visitwhen)
+            ORDER BY visit_date ASC
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$startDate, $endDate]);
+        $results = $stmt->fetchAll();
+
+        // Create a complete date range with zero counts for missing days
+        $dailyCounts = [];
+        $totalVisits = 0;
+        $currentDate = new \DateTime($startDate);
+        $endDateTime = new \DateTime($endDate);
+
+        // Create array indexed by date for quick lookup
+        $visitsByDate = [];
+        foreach ($results as $row) {
+            $visitsByDate[$row['visit_date']] = [
+                'visit_count' => (int)$row['visit_count'],
+                'day_of_week' => $row['day_of_week']
+            ];
+            $totalVisits += (int)$row['visit_count'];
+        }
+
+        // Fill in all dates in the range
+        while ($currentDate <= $endDateTime) {
+            $dateStr = $currentDate->format('Y-m-d');
+            $dayOfWeek = $currentDate->format('l'); // Full day name
+
+            if (isset($visitsByDate[$dateStr])) {
+                $dailyCounts[] = [
+                    'date' => $dateStr,
+                    'visit_count' => $visitsByDate[$dateStr]['visit_count'],
+                    'day_of_week' => $visitsByDate[$dateStr]['day_of_week']
+                ];
+            } else {
+                $dailyCounts[] = [
+                    'date' => $dateStr,
+                    'visit_count' => 0,
+                    'day_of_week' => $dayOfWeek
+                ];
+            }
+
+            $currentDate->add(new \DateInterval('P1D'));
+        }
+
+        return [
+            'daily_counts' => $dailyCounts,
+            'period_info' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'total_days' => $days + 1, // Include both start and end dates
+                'total_visits' => $totalVisits
+            ]
+        ];
+    }
+
+    public function clearVisitHistoryCache($days = null)
+    {
+        if ($days !== null) {
+            $cacheKey = "visit_history_{$days}";
+            return $this->cache->delete($cacheKey);
+        }
+
+        // Clear all visit history cache entries (this is a simplified approach)
+        return $this->cache->clear();
+    }
 }

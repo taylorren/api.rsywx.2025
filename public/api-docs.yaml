@@ -336,6 +336,47 @@ paths:
       security:
         -
           ApiKeyAuth: []
+  /books/visit_history:
+    get:
+      tags:
+        - 'Collection Statistics'
+      summary: 'Get visit count history'
+      description: 'Returns daily visit counts for the past 30 days, useful for creating visit trend graphs'
+      operationId: bc4ef9b75ada8ab26e5938383925e6ce
+      parameters:
+        -
+          name: days
+          in: query
+          description: 'Number of days to include (defaults to 30, max 365)'
+          required: false
+          schema:
+            type: integer
+            maximum: 365
+            minimum: 1
+            example: 30
+        -
+          name: refresh
+          in: query
+          description: 'Force refresh cache'
+          required: false
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: 'Daily visit counts for the specified period'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { type: array, items: { properties: { date: { type: string, example: '2025-08-07' }, visit_count: { type: integer, example: 45 }, day_of_week: { type: string, example: Thursday } }, type: object } }
+                  cached: { type: boolean, example: true }
+                  period_info: { properties: { start_date: { type: string, example: '2025-07-08' }, end_date: { type: string, example: '2025-08-07' }, total_days: { type: integer, example: 30 }, total_visits: { type: integer, example: 1250 } }, type: object }
+                type: object
+      security:
+        -
+          ApiKeyAuth: []
   /health:
     get:
       tags:

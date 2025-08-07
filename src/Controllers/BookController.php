@@ -728,4 +728,90 @@ class BookController
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
+
+    #[OA\Get(
+        path: "/books/visit_history",
+        summary: "Get visit count history",
+        description: "Returns daily visit counts for the past 30 days, useful for creating visit trend graphs",
+        tags: ["Collection Statistics"],
+        security: [["ApiKeyAuth" => []]]
+    )]
+    #[OA\Parameter(
+        name: "days",
+        in: "query",
+        description: "Number of days to include (defaults to 30, max 365)",
+        required: false,
+        schema: new OA\Schema(type: "integer", minimum: 1, maximum: 365, example: 30)
+    )]
+    #[OA\Parameter(
+        name: "refresh",
+        in: "query",
+        description: "Force refresh cache",
+        required: false,
+        schema: new OA\Schema(type: "boolean", example: false)
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Daily visit counts for the specified period",
+        content: new OA\JsonContent(
+            properties: [
+                "success" => new OA\Property(property: "success", type: "boolean", example: true),
+                "data" => new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(
+                        type: "object",
+                        properties: [
+                            "date" => new OA\Property(property: "date", type: "string", example: "2025-08-07"),
+                            "visit_count" => new OA\Property(property: "visit_count", type: "integer", example: 45),
+                            "day_of_week" => new OA\Property(property: "day_of_week", type: "string", example: "Thursday")
+                        ]
+                    )
+                ),
+                "cached" => new OA\Property(property: "cached", type: "boolean", example: true),
+                "period_info" => new OA\Property(
+                    property: "period_info",
+                    type: "object",
+                    properties: [
+                        "start_date" => new OA\Property(property: "start_date", type: "string", example: "2025-07-08"),
+                        "end_date" => new OA\Property(property: "end_date", type: "string", example: "2025-08-07"),
+                        "total_days" => new OA\Property(property: "total_days", type: "integer", example: 30),
+                        "total_visits" => new OA\Property(property: "total_visits", type: "integer", example: 1250)
+                    ]
+                )
+            ]
+        )
+    )]
+    public function visitHistory(Request $request, Response $response)
+    {
+        try {
+            $queryParams = $request->getQueryParams();
+            $forceRefresh = isset($queryParams['refresh']) && $queryParams['refresh'] === 'true';
+            
+            // Get days parameter, default to 30, max 365
+            $days = isset($queryParams['days']) ? (int)$queryParams['days'] : 30;
+            $days = max(1, min(365, $days)); // Ensure days is between 1 and 365
+            
+            $bookModel = new \App\Models\Book();
+            $result = $bookModel->getVisitHistory($days, $forceRefresh);
+            
+            $data = [
+                'success' => true,
+                'data' => $result['data'],
+                'cached' => $result['from_cache'],
+                'period_info' => $result['period_info']
+            ];
+            
+            $response->getBody()->write(json_encode($data));
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $errorData = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            
+            $response->getBody()->write(json_encode($errorData));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
 }
