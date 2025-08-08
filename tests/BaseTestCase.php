@@ -96,6 +96,8 @@ abstract class BaseTestCase extends TestCase
             $group->get('/books/{bookid}', \App\Controllers\BookController::class . ':show');
             $group->get('/misc/wotd', \App\Controllers\MiscController::class . ':wordOfTheDay');
             $group->get('/misc/qotd', \App\Controllers\MiscController::class . ':qotd');
+            $group->get('/readings/summary', \App\Controllers\ReadingController::class . ':summary');
+            $group->get('/readings/latest[/{count:[0-9]+}]', \App\Controllers\ReadingController::class . ':latest');
         });
     }
 

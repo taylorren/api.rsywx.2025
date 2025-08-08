@@ -392,7 +392,98 @@ paths:
               schema:
                 properties:
                   success: { type: boolean, example: true }
-                  data: { properties: { id: { type: integer, example: 15 }, word: { type: string, example: serendipity }, meaning: { type: string, example: 'The occurrence of events by chance in a happy way' }, sentence: { type: string, example: 'It was pure serendipity that led me to discover this amazing book.' }, type: { type: string, example: noun } }, type: object }
+                  data: { properties: { id: { type: integer, example: 42 }, word: { type: string, example: serendipity }, meaning: { type: string, example: 'The occurrence of events by chance in a happy way' }, sentence: { type: string, example: 'It was pure serendipity that led to their meeting.' }, type: { type: string, example: noun } }, type: object }
+                  cached: { type: boolean, example: false }
+                type: object
+      security:
+        -
+          ApiKeyAuth: []
+  /misc/qotd:
+    get:
+      tags:
+        - Miscellaneous
+      summary: 'Get Quote of the Day'
+      description: 'Returns a random quote from the collection'
+      operationId: e5c59aac2c8cb0b97cbe571ee1c90032
+      responses:
+        '200':
+          description: 'Quote of the Day'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { properties: { id: { type: integer, example: 42 }, quote: { type: string, example: 'The only way to do great work is to love what you do.' }, source: { type: string, example: 'Steve Jobs' } }, type: object }
+                  cached: { type: boolean, example: false }
+                type: object
+      security:
+        -
+          ApiKeyAuth: []
+  /readings/summary:
+    get:
+      tags:
+        - 'Reading Statistics'
+      summary: 'Get Reading Summary Statistics'
+      description: 'Returns reading statistics including books read count, reviews written count, and reading activity date range'
+      operationId: 283afd58b7fcd67c8eb8944921aacddb
+      parameters:
+        -
+          name: refresh
+          in: query
+          description: 'Force refresh cache'
+          required: false
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: 'Reading summary statistics'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { properties: { books_read: { type: integer, example: 42 }, reviews_written: { type: integer, example: 156 }, reading_period: { properties: { earliest_date: { type: string, example: '2020-01-15' }, latest_date: { type: string, example: '2025-07-28' }, total_days: { type: integer, example: 1825 } }, type: object } }, type: object }
+                  cached: { type: boolean, example: true }
+                type: object
+      security:
+        -
+          ApiKeyAuth: []
+  '/readings/latest/{count}':
+    get:
+      tags:
+        - 'Reading Statistics'
+      summary: 'Get Latest Readings'
+      description: 'Returns the most recent reading activities with book details, ordered by reading date (newest first)'
+      operationId: d1cb30eb63764f5fd7a7b6f431a8a61d
+      parameters:
+        -
+          name: count
+          in: path
+          description: 'Number of latest readings to return (defaults to 5)'
+          required: false
+          schema:
+            type: integer
+            maximum: 50
+            minimum: 1
+            example: 5
+        -
+          name: refresh
+          in: query
+          description: 'Force refresh cache'
+          required: false
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: 'Latest reading activities'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { type: array, items: { properties: { hid: { type: integer, example: 123 }, bid: { type: integer, example: 456 }, bookid: { type: string, example: '01234' }, title: { type: string, example: 'Book Title' }, author: { type: string, example: 'Author Name' }, reviewtitle: { type: string, example: 'My thoughts on this book' }, create_at: { type: string, example: '2025-07-14' }, cover_uri: { type: string, example: 'https://api.rsywx.com/covers/01234.jpg' }, reviews_count: { type: integer, example: 3 } }, type: object } }
                   cached: { type: boolean, example: true }
                 type: object
       security:
@@ -436,6 +527,9 @@ tags:
   -
     name: Miscellaneous
     description: Miscellaneous
+  -
+    name: 'Reading Statistics'
+    description: 'Reading Statistics'
   -
     name: System
     description: System

@@ -64,16 +64,9 @@ class MiscController
     #[OA\Get(
         path: "/misc/qotd",
         summary: "Get Quote of the Day",
-        description: "Returns a daily quote, changes once per day based on the current date",
+        description: "Returns a random quote from the collection",
         tags: ["Miscellaneous"],
         security: [["ApiKeyAuth" => []]]
-    )]
-    #[OA\Parameter(
-        name: "refresh",
-        in: "query",
-        description: "Force refresh cache",
-        required: false,
-        schema: new OA\Schema(type: "boolean", example: false)
     )]
     #[OA\Response(
         response: 200,
@@ -85,24 +78,20 @@ class MiscController
                     property: "data",
                     type: "object",
                     properties: [
+                        "id" => new OA\Property(property: "id", type: "integer", example: 42),
                         "quote" => new OA\Property(property: "quote", type: "string", example: "The only way to do great work is to love what you do."),
-                        "author" => new OA\Property(property: "author", type: "string", example: "Steve Jobs"),
-                        "date" => new OA\Property(property: "date", type: "string", example: "2025-08-07"),
-                        "day_of_year" => new OA\Property(property: "day_of_year", type: "integer", example: 219)
+                        "source" => new OA\Property(property: "source", type: "string", example: "Steve Jobs")
                     ]
                 ),
-                "cached" => new OA\Property(property: "cached", type: "boolean", example: true)
+                "cached" => new OA\Property(property: "cached", type: "boolean", example: false)
             ]
         )
     )]
     public function qotd(Request $request, Response $response)
     {
         try {
-            $queryParams = $request->getQueryParams();
-            $forceRefresh = isset($queryParams['refresh']) && $queryParams['refresh'] === 'true';
-            
             $quoteModel = new \App\Models\QuoteOfTheDay();
-            $result = $quoteModel->getQuoteOfTheDay($forceRefresh);
+            $result = $quoteModel->getQuoteOfTheDay();
             
             $data = [
                 'success' => true,
