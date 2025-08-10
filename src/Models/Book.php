@@ -146,9 +146,18 @@ class Book
 
         $fromCache = ($booksData !== null);
 
-        // If not cached, fetch from database
+        // If not cached, fetch from database using new unified system
         if ($booksData === null) {
-            $booksData = $this->fetchLatestBooksFromDb($count);
+            $queryBuilder = new BookQueryBuilder();
+            $books = $queryBuilder
+                ->includeFields(['purchase'])
+                ->latest($count)
+                ->execute();
+            
+            // Convert to array format for caching
+            $booksData = array_map(function($book) {
+                return $book->toArray();
+            }, $books);
 
             // Cache the result
             $this->cache->set($cacheKey, $booksData, $this->cacheTtl);
@@ -158,32 +167,6 @@ class Book
             'data' => $booksData,
             'from_cache' => $fromCache
         ];
-    }
-
-    private function fetchLatestBooksFromDb($count)
-    {
-        $query = "
-            SELECT b.id, b.bookid, b.title, b.author, b.purchdate, b.price,
-                   p.name as place_name, 
-                   pub.name as publisher_name
-            FROM book_book b
-            LEFT JOIN book_place p ON b.place = p.id
-            LEFT JOIN book_publisher pub ON b.publisher = pub.id
-            WHERE b.location NOT IN ('na', '--')
-            ORDER BY b.purchdate DESC, b.id DESC
-            LIMIT ?
-        ";
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([$count]);
-        $books = $stmt->fetchAll();
-
-        // Add cover URI to each book
-        foreach ($books as &$book) {
-            $book['cover_uri'] = "https://api.rsywx.com/covers/{$book['bookid']}.jpg";
-        }
-
-        return $books;
     }
 
     public function clearBookCache($bookid)
@@ -218,9 +201,18 @@ class Book
 
         $fromCache = ($booksData !== null);
 
-        // If not cached, fetch from database
+        // If not cached, fetch from database using unified system
         if ($booksData === null) {
-            $booksData = $this->fetchRandomBooksFromDb($count);
+            $queryBuilder = new BookQueryBuilder();
+            $books = $queryBuilder
+                ->includeFields(['purchase', 'visit_stats'])
+                ->random($count)
+                ->execute();
+            
+            // Convert to array format for caching
+            $booksData = array_map(function($book) {
+                return $book->toArray();
+            }, $books);
 
             // Cache the result with shorter TTL
             $this->cache->set($cacheKey, $booksData, $randomCacheTtl);
@@ -230,36 +222,6 @@ class Book
             'data' => $booksData,
             'from_cache' => $fromCache
         ];
-    }
-
-    private function fetchRandomBooksFromDb($count)
-    {
-        $query = "
-            SELECT b.id, b.bookid, b.title, b.author, b.purchdate, b.price,
-                   p.name as place_name, 
-                   pub.name as publisher_name
-            FROM book_book b
-            LEFT JOIN book_place p ON b.place = p.id
-            LEFT JOIN book_publisher pub ON b.publisher = pub.id
-            WHERE b.location NOT IN ('na', '--')
-            ORDER BY RAND()
-            LIMIT ?
-        ";
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([$count]);
-        $books = $stmt->fetchAll();
-
-        // Add cover URI and visit data to each book
-        foreach ($books as &$book) {
-            $book['cover_uri'] = "https://api.rsywx.com/covers/{$book['bookid']}.jpg";
-
-            // Get visit data for each random book
-            $visitData = $this->getBookVisitData($book['id']);
-            $book = array_merge($book, $visitData);
-        }
-
-        return $books;
     }
 
     public function clearRandomBooksCache($count = null)
@@ -285,9 +247,17 @@ class Book
 
         $fromCache = ($booksData !== null);
 
-        // If not cached, fetch from database
+        // If not cached, fetch from database using unified system
         if ($booksData === null) {
-            $booksData = $this->fetchLastVisitedBooksFromDb($count);
+            $queryBuilder = new BookQueryBuilder();
+            $books = $queryBuilder
+                ->lastVisited($count)
+                ->execute();
+            
+            // Convert to array format for caching
+            $booksData = array_map(function($book) {
+                return $book->toArray();
+            }, $books);
 
             // Cache the result with data-driven TTL based on actual visit patterns
             // Analysis shows 80% of visits have <5min gaps, so 2min cache captures most activity
@@ -299,35 +269,6 @@ class Book
             'data' => $booksData,
             'from_cache' => $fromCache
         ];
-    }
-
-    private function fetchLastVisitedBooksFromDb($count)
-    {
-        $query = "
-            SELECT b.id, b.bookid, b.title, b.author, 
-                   recent_visits.visitwhen as last_visited,
-                   recent_visits.region
-            FROM book_book b 
-            INNER JOIN (
-                SELECT v.bookid, v.visitwhen, v.region
-                FROM book_visit v 
-                ORDER BY v.visitwhen DESC 
-                LIMIT ?
-            ) recent_visits ON b.id = recent_visits.bookid
-            WHERE b.location NOT IN ('na', '--')
-            ORDER BY recent_visits.visitwhen DESC
-        ";
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([$count]);
-        $books = $stmt->fetchAll();
-
-        // Add cover URI to each book
-        foreach ($books as &$book) {
-            $book['cover_uri'] = "https://api.rsywx.com/covers/{$book['bookid']}.jpg";
-        }
-
-        return $books;
     }
 
     public function clearLastVisitedBooksCache($count = null)
@@ -356,9 +297,18 @@ class Book
 
         $fromCache = ($booksData !== null);
 
-        // If not cached, fetch from database
+        // If not cached, fetch from database using unified system
         if ($booksData === null) {
-            $booksData = $this->fetchForgottenBooksFromDb($count);
+            $queryBuilder = new BookQueryBuilder();
+            $books = $queryBuilder
+                ->includeFields(['computed'])
+                ->forgotten($count)
+                ->execute();
+            
+            // Convert to array format for caching
+            $booksData = array_map(function($book) {
+                return $book->toArray();
+            }, $books);
 
             // Cache the result with longer TTL
             $this->cache->set($cacheKey, $booksData, $forgottenCacheTtl);
@@ -370,39 +320,6 @@ class Book
         ];
     }
     // TODO: Based on SQL performance analysis, maybe we should add a new filed in Book_Book to capture its latest visit date as a redundancy and quick SQL
-    private function fetchForgottenBooksFromDb($count)
-    {
-        // Simplified approach: Get the books with oldest "most recent visits"
-        // This is more straightforward than the complex nested query
-        $query = "
-            SELECT b.id, b.bookid, b.title, b.author,
-                   forgotten_visits.last_visited,
-                   DATEDIFF(NOW(), forgotten_visits.last_visited) as days_since_visit
-            FROM book_book b 
-            INNER JOIN (
-                SELECT v.bookid, MAX(v.visitwhen) as last_visited
-                FROM book_visit v 
-                INNER JOIN book_book b2 ON v.bookid = b2.id
-                WHERE b2.location NOT IN ('na', '--')
-                GROUP BY v.bookid
-                ORDER BY last_visited ASC 
-                LIMIT ?
-            ) forgotten_visits ON b.id = forgotten_visits.bookid
-            ORDER BY forgotten_visits.last_visited ASC
-        ";
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([$count]);
-        $books = $stmt->fetchAll();
-
-        // Add cover URI to each book
-        foreach ($books as &$book) {
-            $book['cover_uri'] = "https://api.rsywx.com/covers/{$book['bookid']}.jpg";
-            $book['days_since_visit'] = (int)$book['days_since_visit'];
-        }
-
-        return $books;
-    }
 
     public function clearForgottenBooksCache($count = null)
     {
@@ -441,9 +358,18 @@ class Book
 
         $fromCache = ($booksData !== null);
 
-        // If not cached, fetch from database
+        // If not cached, fetch from database using unified system
         if ($booksData === null) {
-            $booksData = $this->fetchTodaysBooksFromDb($monthDay, $currentYear);
+            $queryBuilder = new BookQueryBuilder();
+            $books = $queryBuilder
+                ->includeFields(['purchase'])
+                ->todaysBooks($month, $date)
+                ->execute();
+            
+            // Convert to array format for caching
+            $booksData = array_map(function($book) {
+                return $book->toArray();
+            }, $books);
 
             // Cache the result with full day TTL
             $this->cache->set($cacheKey, $booksData, $todaysCacheTtl);
@@ -458,39 +384,6 @@ class Book
                 'is_today' => $isToday
             ]
         ];
-    }
-
-    private function fetchTodaysBooksFromDb($monthDay, $currentYear)
-    {
-        $query = "
-            SELECT b.id, b.bookid, b.title, b.author, b.purchdate, b.price, b.location,
-                   p.name as place_name, 
-                   pub.name as publisher_name,
-                   YEAR(b.purchdate) as purchase_year,
-                   (? - YEAR(b.purchdate)) as years_ago
-            FROM book_book b
-            LEFT JOIN book_place p ON b.place = p.id
-            LEFT JOIN book_publisher pub ON b.publisher = pub.id
-            WHERE b.location NOT IN ('na', '--')
-              AND DATE_FORMAT(b.purchdate, '%m-%d') = ?
-              AND YEAR(b.purchdate) < ?
-            ORDER BY b.purchdate DESC
-        ";
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([$currentYear, $monthDay, $currentYear]);
-        $books = $stmt->fetchAll();
-
-        // Add cover URI to each book
-        foreach ($books as &$book) {
-            $book['cover_uri'] = "https://api.rsywx.com/covers/{$book['bookid']}.jpg";
-            $book['years_ago'] = (int)$book['years_ago'];
-
-            // Remove the temporary purchase_year field
-            unset($book['purchase_year']);
-        }
-
-        return $books;
     }
 
     public function clearTodaysBooksCache()

@@ -86,7 +86,7 @@ class ApiEndpointsTest extends BaseTestCase
 
     public function testBookDetailEndpointWithValidBook()
     {
-        $request = $this->createRequest('GET', '/api/v1/books/00666', [
+        $request = $this->createRequest('GET', '/api/v1/books/00666?refresh=true', [
             'X-API-Key' => 'test-api-key-12345'
         ]);
 
@@ -119,6 +119,10 @@ class ApiEndpointsTest extends BaseTestCase
             $this->assertArrayHasKey('bookid', $bookData);
             $this->assertArrayHasKey('title', $bookData);
             $this->assertArrayHasKey('author', $bookData);
+            $this->assertArrayHasKey('translated', $bookData);
+            $this->assertArrayHasKey('copyrighter', $bookData);
+            $this->assertArrayHasKey('region', $bookData);
+            $this->assertArrayHasKey('location', $bookData);
             $this->assertArrayHasKey('cover_uri', $bookData);
             $this->assertArrayHasKey('total_visits', $bookData);
             $this->assertArrayHasKey('last_visited', $bookData);
@@ -151,7 +155,7 @@ class ApiEndpointsTest extends BaseTestCase
 
     public function testLatestBooksEndpointDefault()
     {
-        $request = $this->createRequest('GET', '/api/v1/books/latest', [
+        $request = $this->createRequest('GET', '/api/v1/books/latest?refresh=true', [
             'X-API-Key' => 'test-api-key-12345'
         ]);
 
@@ -179,6 +183,10 @@ class ApiEndpointsTest extends BaseTestCase
                 $this->assertArrayHasKey('bookid', $book);
                 $this->assertArrayHasKey('title', $book);
                 $this->assertArrayHasKey('author', $book);
+                $this->assertArrayHasKey('translated', $book);
+                $this->assertArrayHasKey('copyrighter', $book);
+                $this->assertArrayHasKey('region', $book);
+                $this->assertArrayHasKey('location', $book);
                 $this->assertArrayHasKey('purchdate', $book);
                 $this->assertArrayHasKey('price', $book);
                 $this->assertArrayHasKey('cover_uri', $book);
@@ -229,7 +237,7 @@ class ApiEndpointsTest extends BaseTestCase
 
     public function testRandomBooksEndpointDefault()
     {
-        $request = $this->createRequest('GET', '/api/v1/books/random', [
+        $request = $this->createRequest('GET', '/api/v1/books/random?refresh=true', [
             'X-API-Key' => 'test-api-key-12345'
         ]);
 
@@ -257,6 +265,10 @@ class ApiEndpointsTest extends BaseTestCase
                 $this->assertArrayHasKey('bookid', $book);
                 $this->assertArrayHasKey('title', $book);
                 $this->assertArrayHasKey('author', $book);
+                $this->assertArrayHasKey('translated', $book);
+                $this->assertArrayHasKey('copyrighter', $book);
+                $this->assertArrayHasKey('region', $book);
+                $this->assertArrayHasKey('location', $book);
                 $this->assertArrayHasKey('cover_uri', $book);
                 $this->assertArrayHasKey('total_visits', $book);
                 $this->assertArrayHasKey('last_visited', $book);
@@ -302,6 +314,10 @@ class ApiEndpointsTest extends BaseTestCase
                 $this->assertArrayHasKey('bookid', $book);
                 $this->assertArrayHasKey('title', $book);
                 $this->assertArrayHasKey('author', $book);
+                $this->assertArrayHasKey('translated', $book);
+                $this->assertArrayHasKey('copyrighter', $book);
+                $this->assertArrayHasKey('region', $book);
+                $this->assertArrayHasKey('location', $book);
                 $this->assertArrayHasKey('cover_uri', $book);
                 $this->assertArrayHasKey('total_visits', $book);
                 $this->assertArrayHasKey('last_visited', $book);
@@ -406,7 +422,7 @@ class ApiEndpointsTest extends BaseTestCase
 
     public function testLastVisitedBooksEndpointDefault()
     {
-        $request = $this->createRequest('GET', '/api/v1/books/last_visited', [
+        $request = $this->createRequest('GET', '/api/v1/books/last_visited?refresh=true', [
             'X-API-Key' => 'test-api-key-12345'
         ]);
 
@@ -434,9 +450,13 @@ class ApiEndpointsTest extends BaseTestCase
                 $this->assertArrayHasKey('bookid', $book);
                 $this->assertArrayHasKey('title', $book);
                 $this->assertArrayHasKey('author', $book);
+                $this->assertArrayHasKey('translated', $book);
+                $this->assertArrayHasKey('copyrighter', $book);
                 $this->assertArrayHasKey('cover_uri', $book);
                 $this->assertArrayHasKey('last_visited', $book);
+                $this->assertArrayHasKey('visit_country', $book);
                 $this->assertArrayHasKey('region', $book);
+                $this->assertArrayHasKey('location', $book);
 
                 // Check data types
                 $this->assertIsInt($book['id']);
@@ -445,8 +465,10 @@ class ApiEndpointsTest extends BaseTestCase
                 $this->assertIsString($book['author']);
                 $this->assertIsString($book['cover_uri']);
                 $this->assertIsString($book['last_visited']);
-                // Region can be null in the database
-                $this->assertTrue(is_string($book['region']) || is_null($book['region']));
+                // Visit country can be null in the database
+                $this->assertTrue(is_string($book['visit_country']) || is_null($book['visit_country']));
+                // Author region should always be present
+                $this->assertIsString($book['region']);
             }
         } catch (\PDOException $e) {
             $this->markTestSkipped('Database connection failed: ' . $e->getMessage());
@@ -505,9 +527,13 @@ class ApiEndpointsTest extends BaseTestCase
                 $this->assertArrayHasKey('bookid', $book);
                 $this->assertArrayHasKey('title', $book);
                 $this->assertArrayHasKey('author', $book);
+                $this->assertArrayHasKey('translated', $book);
+                $this->assertArrayHasKey('copyrighter', $book);
+                $this->assertArrayHasKey('region', $book);
+                $this->assertArrayHasKey('location', $book);
                 $this->assertArrayHasKey('cover_uri', $book);
                 $this->assertArrayHasKey('last_visited', $book);
-                $this->assertArrayHasKey('region', $book);
+                $this->assertArrayHasKey('visit_country', $book);
             }
         } catch (\Exception $e) {
             $this->markTestSkipped('Database not available for testing: ' . $e->getMessage());
@@ -583,7 +609,7 @@ class ApiEndpointsTest extends BaseTestCase
 
     public function testForgottenBooksEndpointDefault()
     {
-        $request = $this->createRequest('GET', '/api/v1/books/forgotten', [
+        $request = $this->createRequest('GET', '/api/v1/books/forgotten?refresh=true', [
             'X-API-Key' => 'test-api-key-12345'
         ]);
 

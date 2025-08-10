@@ -141,6 +141,23 @@
                                                     "type": "string",
                                                     "example": "卡尔维诺"
                                                 },
+                                                "translated": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "copyrighter": {
+                                                    "type": "string",
+                                                    "example": "译林出版社",
+                                                    "nullable": true
+                                                },
+                                                "region": {
+                                                    "type": "string",
+                                                    "example": "意大利"
+                                                },
+                                                "location": {
+                                                    "type": "string",
+                                                    "example": "书房"
+                                                },
                                                 "publisher_name": {
                                                     "type": "string",
                                                     "example": "花城出版社"
@@ -283,6 +300,23 @@
                                                         "type": "string",
                                                         "example": "布洛赫"
                                                     },
+                                                    "translated": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "copyrighter": {
+                                                        "type": "string",
+                                                        "example": "译林出版社",
+                                                        "nullable": true
+                                                    },
+                                                    "region": {
+                                                        "type": "string",
+                                                        "example": "奥地利"
+                                                    },
+                                                    "location": {
+                                                        "type": "string",
+                                                        "example": "书房"
+                                                    },
                                                     "publisher_name": {
                                                         "type": "string",
                                                         "example": "译林出版社"
@@ -387,6 +421,23 @@
                                                     "author": {
                                                         "type": "string",
                                                         "example": "作者姓名"
+                                                    },
+                                                    "translated": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "copyrighter": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "region": {
+                                                        "type": "string",
+                                                        "example": "中国"
+                                                    },
+                                                    "location": {
+                                                        "type": "string",
+                                                        "example": "书房"
                                                     },
                                                     "publisher_name": {
                                                         "type": "string",
@@ -493,6 +544,24 @@
                                                         "type": "string",
                                                         "example": "作者姓名"
                                                     },
+                                                    "translated": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "copyrighter": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "region": {
+                                                        "description": "Author's region",
+                                                        "type": "string",
+                                                        "example": "中国"
+                                                    },
+                                                    "location": {
+                                                        "type": "string",
+                                                        "example": "书房"
+                                                    },
                                                     "cover_uri": {
                                                         "type": "string",
                                                         "example": "https://api.rsywx.com/covers/01234.jpg"
@@ -501,10 +570,11 @@
                                                         "type": "string",
                                                         "example": "2025-07-27 12:30:00"
                                                     },
-                                                    "region": {
-                                                        "description": "Region where the book was accessed",
+                                                    "visit_country": {
+                                                        "description": "Country where the book was accessed",
                                                         "type": "string",
-                                                        "example": "home"
+                                                        "example": "China",
+                                                        "nullable": true
                                                     }
                                                 },
                                                 "type": "object"
@@ -590,6 +660,23 @@
                                                     "author": {
                                                         "type": "string",
                                                         "example": "作者姓名"
+                                                    },
+                                                    "translated": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "copyrighter": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "region": {
+                                                        "type": "string",
+                                                        "example": "中国"
+                                                    },
+                                                    "location": {
+                                                        "type": "string",
+                                                        "example": "书房"
                                                     },
                                                     "cover_uri": {
                                                         "type": "string",
@@ -701,6 +788,24 @@
                                                         "type": "string",
                                                         "example": "作者姓名"
                                                     },
+                                                    "translated": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "copyrighter": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "region": {
+                                                        "type": "string",
+                                                        "example": "中国"
+                                                    },
+                                                    "location": {
+                                                        "description": "Physical location/shelf code where the book is stored",
+                                                        "type": "string",
+                                                        "example": "f3"
+                                                    },
                                                     "publisher_name": {
                                                         "type": "string",
                                                         "example": "出版社名称"
@@ -716,11 +821,6 @@
                                                     "price": {
                                                         "type": "number",
                                                         "example": 25.5
-                                                    },
-                                                    "location": {
-                                                        "description": "Physical location/shelf code where the book is stored",
-                                                        "type": "string",
-                                                        "example": "f3"
                                                     },
                                                     "cover_uri": {
                                                         "type": "string",
@@ -841,6 +941,24 @@
                                                         "type": "string",
                                                         "example": "作者姓名"
                                                     },
+                                                    "translated": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "copyrighter": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "region": {
+                                                        "type": "string",
+                                                        "example": "中国"
+                                                    },
+                                                    "location": {
+                                                        "description": "Physical location/shelf code where the book is stored",
+                                                        "type": "string",
+                                                        "example": "f3"
+                                                    },
                                                     "publisher_name": {
                                                         "type": "string",
                                                         "example": "出版社名称"
@@ -856,11 +974,6 @@
                                                     "price": {
                                                         "type": "number",
                                                         "example": 25.5
-                                                    },
-                                                    "location": {
-                                                        "description": "Physical location/shelf code where the book is stored",
-                                                        "type": "string",
-                                                        "example": "f3"
                                                     },
                                                     "cover_uri": {
                                                         "type": "string",
@@ -1113,6 +1226,210 @@
                                         "cached": {
                                             "type": "boolean",
                                             "example": false
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/misc/weather/current": {
+            "get": {
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Get Current Weather",
+                "description": "Returns current weather conditions using QWeather API",
+                "operationId": "fd867e951e658c5004cd0f407ccda0bb",
+                "parameters": [
+                    {
+                        "name": "location",
+                        "in": "query",
+                        "description": "Location (city name, coordinates, or location ID)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "beijing"
+                        }
+                    },
+                    {
+                        "name": "refresh",
+                        "in": "query",
+                        "description": "Force refresh cache",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Current weather conditions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "location": {
+                                                    "type": "string",
+                                                    "example": "beijing"
+                                                },
+                                                "temperature": {
+                                                    "type": "string",
+                                                    "example": "25"
+                                                },
+                                                "feels_like": {
+                                                    "type": "string",
+                                                    "example": "27"
+                                                },
+                                                "condition": {
+                                                    "type": "string",
+                                                    "example": "Sunny"
+                                                },
+                                                "humidity": {
+                                                    "type": "string",
+                                                    "example": "65"
+                                                },
+                                                "pressure": {
+                                                    "type": "string",
+                                                    "example": "1013"
+                                                },
+                                                "wind_speed": {
+                                                    "type": "string",
+                                                    "example": "15"
+                                                },
+                                                "update_time": {
+                                                    "type": "string",
+                                                    "example": "2025-08-07T14:30+08:00"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "cached": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/misc/weather/forecast": {
+            "get": {
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Get Weather Forecast",
+                "description": "Returns weather forecast using QWeather API",
+                "operationId": "6481df878e80802c662bd35770564e58",
+                "parameters": [
+                    {
+                        "name": "location",
+                        "in": "query",
+                        "description": "Location (city name, coordinates, or location ID)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "beijing"
+                        }
+                    },
+                    {
+                        "name": "days",
+                        "in": "query",
+                        "description": "Number of forecast days (1-7)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 7,
+                            "minimum": 1,
+                            "example": 3
+                        }
+                    },
+                    {
+                        "name": "refresh",
+                        "in": "query",
+                        "description": "Force refresh cache",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Weather forecast",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "location": {
+                                                    "type": "string",
+                                                    "example": "beijing"
+                                                },
+                                                "forecast": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "date": {
+                                                                "type": "string",
+                                                                "example": "2025-08-07"
+                                                            },
+                                                            "temp_max": {
+                                                                "type": "string",
+                                                                "example": "28"
+                                                            },
+                                                            "temp_min": {
+                                                                "type": "string",
+                                                                "example": "18"
+                                                            },
+                                                            "condition_day": {
+                                                                "type": "string",
+                                                                "example": "Sunny"
+                                                            },
+                                                            "condition_night": {
+                                                                "type": "string",
+                                                                "example": "Clear"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "cached": {
+                                            "type": "boolean",
+                                            "example": true
                                         }
                                     },
                                     "type": "object"

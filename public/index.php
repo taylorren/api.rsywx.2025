@@ -130,6 +130,8 @@ $app->group('/api/' . $_ENV['API_VERSION'], function ($group) {
     // Miscellaneous endpoints
     $group->get('/misc/wotd', \App\Controllers\MiscController::class . ':wordOfTheDay');
     $group->get('/misc/qotd', \App\Controllers\MiscController::class . ':qotd');
+    $group->get('/misc/weather/current', \App\Controllers\MiscController::class . ':currentWeather');
+    $group->get('/misc/weather/forecast', \App\Controllers\MiscController::class . ':weatherForecast');
     
     // Reading statistics endpoints
     $group->get('/readings/summary', \App\Controllers\ReadingController::class . ':summary');

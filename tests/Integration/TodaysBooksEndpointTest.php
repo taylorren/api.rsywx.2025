@@ -10,7 +10,7 @@ class TodaysBooksEndpointTest extends BaseTestCase
 
     public function testTodaysBooksEndpointDefault()
     {
-        $request = $this->createRequest('GET', '/api/v1/books/today', [
+        $request = $this->createRequest('GET', '/api/v1/books/today?refresh=true', [
             'X-API-Key' => $this->apiKey
         ]);
 
@@ -48,11 +48,14 @@ class TodaysBooksEndpointTest extends BaseTestCase
                 $this->assertArrayHasKey('bookid', $book);
                 $this->assertArrayHasKey('title', $book);
                 $this->assertArrayHasKey('author', $book);
+                $this->assertArrayHasKey('translated', $book);
+                $this->assertArrayHasKey('copyrighter', $book);
+                $this->assertArrayHasKey('region', $book);
+                $this->assertArrayHasKey('location', $book);
                 $this->assertArrayHasKey('publisher_name', $book);
                 $this->assertArrayHasKey('place_name', $book);
                 $this->assertArrayHasKey('purchdate', $book);
                 $this->assertArrayHasKey('price', $book);
-                $this->assertArrayHasKey('location', $book);
                 $this->assertArrayHasKey('cover_uri', $book);
                 $this->assertArrayHasKey('years_ago', $book);
 
