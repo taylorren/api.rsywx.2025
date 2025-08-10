@@ -502,4 +502,56 @@ class Book
         // Clear all visit history cache entries (this is a simplified approach)
         return $this->cache->clear();
     }
+
+    public function listBooks($type = 'id', $value = null, $page = 1, $perPage = null)
+    {
+        if ($perPage === null) {
+            $perPage = (int)($_ENV['LIST_PER_PAGE'] ?? 10);
+        }
+        
+        $queryBuilder = new BookQueryBuilder();
+        $queryBuilder->includeFields(['purchase', 'rich']);
+        
+        switch ($type) {
+            case 'author':
+                if ($value) $queryBuilder->searchByAuthor($value);
+                break;
+            case 'title':
+                if ($value) $queryBuilder->searchByTitle($value);
+                break;
+            case 'tag':
+                if ($value) $queryBuilder->searchByTag($value);
+                break;
+            case 'misc':
+                if ($value) $queryBuilder->searchMisc($value);
+                break;
+            case 'id':
+            default:
+                // Default: order by id desc (latest books first)
+                $queryBuilder->orderBy('b.id DESC');
+                break;
+        }
+        
+        $result = $queryBuilder->paginate($page, $perPage)->execute();
+        $total = $queryBuilder->count();
+        
+        // Load tags for each book
+        foreach ($result as $book) {
+            $book->tags = $this->getBookTags($book->id);
+        }
+        
+        $books = array_map(function($book) {
+            return $book->toArray();
+        }, $result);
+        
+        return [
+            'data' => $books,
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => ceil($total / $perPage),
+                'total_results' => $total,
+                'per_page' => $perPage
+            ]
+        ];
+    }
 }

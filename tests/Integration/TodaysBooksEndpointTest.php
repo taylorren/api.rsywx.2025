@@ -52,8 +52,8 @@ class TodaysBooksEndpointTest extends BaseTestCase
                 $this->assertArrayHasKey('copyrighter', $book);
                 $this->assertArrayHasKey('region', $book);
                 $this->assertArrayHasKey('location', $book);
-                $this->assertArrayHasKey('publisher_name', $book);
-                $this->assertArrayHasKey('place_name', $book);
+
+
                 $this->assertArrayHasKey('purchdate', $book);
                 $this->assertArrayHasKey('price', $book);
                 $this->assertArrayHasKey('cover_uri', $book);

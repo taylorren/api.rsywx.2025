@@ -377,6 +377,58 @@ paths:
       security:
         -
           ApiKeyAuth: []
+  '/books/list/{type}/{value}/{page}':
+    get:
+      tags:
+        - 'Book Lists'
+      summary: 'List/search books'
+      description: 'Search books by author, title, tag, or misc criteria with pagination'
+      operationId: bad8c4677dbb35e86bd79083a9686368
+      parameters:
+        -
+          name: type
+          in: path
+          description: 'Search type: author, title, tag, misc'
+          required: true
+          schema:
+            type: string
+            enum:
+              - author
+              - title
+              - tag
+              - misc
+            example: author
+        -
+          name: value
+          in: path
+          description: 'Search value'
+          required: true
+          schema:
+            type: string
+            example: 卡尔维诺
+        -
+          name: page
+          in: path
+          description: 'Page number (1-based)'
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            example: 1
+      responses:
+        '200':
+          description: 'List of books matching search criteria'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { type: array, items: { properties: { id: { type: integer, example: 666 }, bookid: { type: string, example: '00666' }, title: { type: string, example: 隐形的城市 }, author: { type: string, example: 卡尔维诺 }, translated: { type: boolean, example: true }, copyrighter: { type: string, example: 译林出版社, nullable: true }, region: { type: string, example: 意大利 }, location: { type: string, example: 书房 }, purchdate: { type: string, example: '2020-05-15' }, tags: { type: array, items: { type: string }, example: [意大利, 文学, 经典] }, cover_uri: { type: string, example: 'https://api.rsywx.com/covers/00666.jpg' } }, type: object } }
+                  pagination: { properties: { current_page: { type: integer, example: 1 }, total_pages: { type: integer, example: 5 }, total_results: { type: integer, example: 23 }, per_page: { type: integer, example: 20 } }, type: object }
+                type: object
+      security:
+        -
+          ApiKeyAuth: []
   /misc/wotd:
     get:
       tags:

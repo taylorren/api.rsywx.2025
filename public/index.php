@@ -125,14 +125,17 @@ $app->group('/api/' . $_ENV['API_VERSION'], function ($group) {
     $group->get('/books/today/{month:[0-9]+}/{date:[0-9]+}', \App\Controllers\BookController::class . ':todayWithParams');
     $group->get('/books/today', \App\Controllers\BookController::class . ':today');
     $group->get('/books/visit_history', \App\Controllers\BookController::class . ':visitHistory');
-    $group->get('/books/{bookid}', \App\Controllers\BookController::class . ':show');
-    
+    $group->get('/books/{bookid:[0-9]{5}}', \App\Controllers\BookController::class . ':show');
+
     // Miscellaneous endpoints
     $group->get('/misc/wotd', \App\Controllers\MiscController::class . ':wordOfTheDay');
     $group->get('/misc/qotd', \App\Controllers\MiscController::class . ':qotd');
     $group->get('/misc/weather/current', \App\Controllers\MiscController::class . ':currentWeather');
     $group->get('/misc/weather/forecast', \App\Controllers\MiscController::class . ':weatherForecast');
-    
+
+    // Book list/search endpoint
+    $group->get('/books/list[/{type}[/{value}[/{page:[0-9]+}]]]', \App\Controllers\BookController::class . ':listBooks');
+
     // Reading statistics endpoints
     $group->get('/readings/summary', \App\Controllers\ReadingController::class . ':summary');
     $group->get('/readings/latest[/{count:[0-9]+}]', \App\Controllers\ReadingController::class . ':latest');

@@ -50,6 +50,14 @@ class BookResponse
             $this->cover_uri = "https://api.rsywx.com/covers/{$this->bookid}.jpg";
             $this->setFields[] = 'cover_uri';
         }
+        
+        // Ensure core fields are always in setFields
+        $coreFields = ['id', 'bookid', 'title', 'author', 'cover_uri', 'translated', 'copyrighter', 'region', 'location'];
+        foreach ($coreFields as $field) {
+            if (!in_array($field, $this->setFields)) {
+                $this->setFields[] = $field;
+            }
+        }
     }
 
     /**
@@ -117,10 +125,11 @@ class BookResponse
         ];
 
         foreach ($directFields as $field) {
-            if (isset($row[$field])) {
+            if (array_key_exists($field, $row)) {
                 $data[$field] = $row[$field];
             }
         }
+
 
         return new self($data);
     }

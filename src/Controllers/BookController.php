@@ -840,4 +840,100 @@ class BookController
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
+
+    #[OA\Get(
+        path: "/books/list/{type}/{value}/{page}",
+        summary: "List/search books",
+        description: "Search books by author, title, tag, or misc criteria with pagination",
+        tags: ["Book Lists"],
+        security: [["ApiKeyAuth" => []]]
+    )]
+    #[OA\Parameter(
+        name: "type",
+        in: "path",
+        description: "Search type: author, title, tag, misc",
+        required: true,
+        schema: new OA\Schema(type: "string", enum: ["author", "title", "tag", "misc"], example: "author")
+    )]
+    #[OA\Parameter(
+        name: "value",
+        in: "path",
+        description: "Search value",
+        required: true,
+        schema: new OA\Schema(type: "string", example: "卡尔维诺")
+    )]
+    #[OA\Parameter(
+        name: "page",
+        in: "path",
+        description: "Page number (1-based)",
+        required: true,
+        schema: new OA\Schema(type: "integer", minimum: 1, example: 1)
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "List of books matching search criteria",
+        content: new OA\JsonContent(
+            properties: [
+                "success" => new OA\Property(property: "success", type: "boolean", example: true),
+                "data" => new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(
+                        type: "object",
+                        properties: [
+                            "id" => new OA\Property(property: "id", type: "integer", example: 666),
+                            "bookid" => new OA\Property(property: "bookid", type: "string", example: "00666"),
+                            "title" => new OA\Property(property: "title", type: "string", example: "隐形的城市"),
+                            "author" => new OA\Property(property: "author", type: "string", example: "卡尔维诺"),
+                            "translated" => new OA\Property(property: "translated", type: "boolean", example: true),
+                            "copyrighter" => new OA\Property(property: "copyrighter", type: "string", example: "译林出版社", nullable: true),
+                            "region" => new OA\Property(property: "region", type: "string", example: "意大利"),
+                            "location" => new OA\Property(property: "location", type: "string", example: "书房"),
+                            "purchdate" => new OA\Property(property: "purchdate", type: "string", example: "2020-05-15"),
+                            "tags" => new OA\Property(property: "tags", type: "array", items: new OA\Items(type: "string"), example: ["意大利", "文学", "经典"]),
+                            "cover_uri" => new OA\Property(property: "cover_uri", type: "string", example: "https://api.rsywx.com/covers/00666.jpg")
+                        ]
+                    )
+                ),
+                "pagination" => new OA\Property(
+                    property: "pagination",
+                    type: "object",
+                    properties: [
+                        "current_page" => new OA\Property(property: "current_page", type: "integer", example: 1),
+                        "total_pages" => new OA\Property(property: "total_pages", type: "integer", example: 5),
+                        "total_results" => new OA\Property(property: "total_results", type: "integer", example: 23),
+                        "per_page" => new OA\Property(property: "per_page", type: "integer", example: 20)
+                    ]
+                )
+            ]
+        )
+    )]
+    public function listBooks(Request $request, Response $response, $args)
+    {
+        try {
+            $type = $args['type'] ?? 'id';
+            $value = isset($args['value']) ? urldecode($args['value']) : null;
+            $page = isset($args['page']) ? (int)$args['page'] : 1;
+            
+            $bookModel = new Book();
+            $result = $bookModel->listBooks($type, $value, $page);
+            
+            $data = [
+                'success' => true,
+                'data' => $result['data'],
+                'pagination' => $result['pagination']
+            ];
+            
+            $response->getBody()->write(json_encode($data));
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $errorData = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            
+            $response->getBody()->write(json_encode($errorData));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
 }

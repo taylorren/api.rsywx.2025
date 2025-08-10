@@ -13,6 +13,7 @@ class BookQueryBuilder
     private $conditions = [];
     private $orderBy = [];
     private $limit = null;
+    private $offset = null;
     
     public function __construct()
     {
@@ -123,14 +124,14 @@ class BookQueryBuilder
     
     public function latest($count = 1)
     {
-        $this->orderBy('b.purchdate DESC, b.id DESC');
+        $this->addOrderBy('b.purchdate DESC, b.id DESC');
         $this->limit($count);
         return $this;
     }
     
     public function random($count = 1)
     {
-        $this->orderBy('RAND()');
+        $this->addOrderBy('RAND()');
         $this->limit($count);
         return $this;
     }
@@ -149,7 +150,7 @@ class BookQueryBuilder
         $this->addField('recent_visits.visitwhen', 'last_visited');
         $this->addField('recent_visits.country', 'visit_country');
         
-        $this->orderBy('recent_visits.visitwhen DESC');
+        $this->addOrderBy('recent_visits.visitwhen DESC');
         return $this;
     }
     
@@ -167,7 +168,7 @@ class BookQueryBuilder
         ) forgotten_visits ON b.id = forgotten_visits.bookid');
         
         $this->addField('forgotten_visits.last_visited', 'last_visited');
-        $this->orderBy('forgotten_visits.last_visited ASC');
+        $this->addOrderBy('forgotten_visits.last_visited ASC');
         return $this;
     }
     
@@ -179,7 +180,7 @@ class BookQueryBuilder
         $this->addCondition("DATE_FORMAT(b.purchdate, '%m-%d') = ?", $monthDay);
         $this->addCondition("YEAR(b.purchdate) < ?", $currentYear);
         $this->addField("({$currentYear} - YEAR(b.purchdate))", 'years_ago');
-        $this->orderBy('b.purchdate DESC');
+        $this->addOrderBy('b.purchdate DESC');
         
         return $this;
     }
@@ -219,9 +220,15 @@ class BookQueryBuilder
         $this->conditions[] = ['condition' => $condition, 'value' => $value];
     }
     
-    private function orderBy($orderBy)
+    private function addOrderBy($orderBy)
     {
         $this->orderBy[] = $orderBy;
+    }
+    
+    public function orderBy($orderBy)
+    {
+        $this->orderBy[] = $orderBy;
+        return $this;
     }
     
     private function limit($limit)
@@ -249,7 +256,11 @@ class BookQueryBuilder
         }
         
         if ($this->limit) {
-            $query .= "LIMIT {$this->limit}";
+            $query .= "LIMIT ";
+            if ($this->offset) {
+                $query .= "{$this->offset}, ";
+            }
+            $query .= "{$this->limit}";
         }
         
         // Prepare and execute
@@ -258,13 +269,19 @@ class BookQueryBuilder
         // Bind parameters
         $paramIndex = 1;
         foreach ($this->conditions as $condition) {
-            if ($condition['value'] !== null) {
+            if (isset($condition['values'])) {
+                foreach ($condition['values'] as $value) {
+                    $stmt->bindValue($paramIndex++, $value);
+                }
+            } elseif ($condition['value'] !== null) {
                 $stmt->bindValue($paramIndex++, $condition['value']);
             }
         }
         
         $stmt->execute();
         $results = $stmt->fetchAll();
+        
+
         
         // Convert to BookResponse objects
         $books = [];
@@ -280,5 +297,79 @@ class BookQueryBuilder
         $this->limit(1);
         $results = $this->execute();
         return !empty($results) ? $results[0] : null;
+    }
+    
+    public function searchByAuthor($author)
+    {
+        $this->addCondition("b.author LIKE ?", "%{$author}%");
+        return $this;
+    }
+    
+    public function searchByTitle($title)
+    {
+        $this->addCondition("b.title LIKE ?", "%{$title}%");
+        return $this;
+    }
+    
+    public function searchByTag($tag)
+    {
+        $this->addJoin('INNER JOIN book_taglist t ON b.id = t.bid');
+        $this->addCondition("t.tag = ?", $tag);
+        return $this;
+    }
+    
+    public function searchMisc($value)
+    {
+        $this->conditions[] = [
+            'condition' => "(b.title LIKE ? OR b.author LIKE ?)", 
+            'values' => ["%{$value}%", "%{$value}%"]
+        ];
+        return $this;
+    }
+    
+    public function paginate($page, $perPage)
+    {
+        $offset = ($page - 1) * $perPage;
+        $this->limit = $perPage;
+        $this->offset = $offset;
+        return $this;
+    }
+    
+    public function count()
+    {
+        // Build count query without LIMIT
+        $query = "SELECT COUNT(DISTINCT b.id) as total ";
+        $query .= $this->baseQuery . " ";
+        $query .= implode(' ', $this->joins) . " ";
+        
+        // Filter out LIMIT conditions and location filter
+        $countConditions = array_filter($this->conditions, function($c) {
+            return !str_contains($c['condition'], 'LIMIT');
+        });
+        
+        // Always exclude invalid locations for count
+        $countConditions[] = ['condition' => "b.location NOT IN ('na', '--')", 'value' => null];
+        
+        if (!empty($countConditions)) {
+            $whereConditions = array_map(function($c) { return $c['condition']; }, $countConditions);
+            $query .= "WHERE " . implode(' AND ', $whereConditions) . " ";
+        }
+        
+        $stmt = $this->db->prepare($query);
+        
+        $paramIndex = 1;
+        foreach ($countConditions as $condition) {
+            if (isset($condition['values'])) {
+                foreach ($condition['values'] as $value) {
+                    $stmt->bindValue($paramIndex++, $value);
+                }
+            } elseif ($condition['value'] !== null) {
+                $stmt->bindValue($paramIndex++, $condition['value']);
+            }
+        }
+        
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return (int)$result['total'];
     }
 }
