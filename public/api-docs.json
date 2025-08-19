@@ -158,6 +158,60 @@
                                                     "type": "string",
                                                     "example": "书房"
                                                 },
+                                                "purchdate": {
+                                                    "type": "string",
+                                                    "example": "2020-05-15"
+                                                },
+                                                "price": {
+                                                    "type": "number",
+                                                    "example": 45
+                                                },
+                                                "pubdate": {
+                                                    "type": "string",
+                                                    "example": "2019-03-01"
+                                                },
+                                                "printdate": {
+                                                    "type": "string",
+                                                    "example": "2019-03-15"
+                                                },
+                                                "ver": {
+                                                    "type": "string",
+                                                    "example": "1"
+                                                },
+                                                "deco": {
+                                                    "type": "string",
+                                                    "example": "精装"
+                                                },
+                                                "isbn": {
+                                                    "type": "string",
+                                                    "example": "978-7-5447-6789-0"
+                                                },
+                                                "category": {
+                                                    "type": "string",
+                                                    "example": "文学",
+                                                    "nullable": true
+                                                },
+                                                "ol": {
+                                                    "type": "string",
+                                                    "example": "cn",
+                                                    "nullable": true
+                                                },
+                                                "kword": {
+                                                    "type": "integer",
+                                                    "example": 120
+                                                },
+                                                "page": {
+                                                    "type": "integer",
+                                                    "example": 280
+                                                },
+                                                "intro": {
+                                                    "type": "string",
+                                                    "example": "Book introduction text"
+                                                },
+                                                "instock": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
                                                 "publisher_name": {
                                                     "type": "string",
                                                     "example": "花城出版社"
@@ -1125,27 +1179,29 @@
                 ]
             }
         },
-        "/books/list/{type}/{value}/{page}": {
+        "/books/list/{type?}/{value?}/{page?}": {
             "get": {
                 "tags": [
                     "Book Lists"
                 ],
                 "summary": "List/search books",
-                "description": "Search books by author, title, tag, or misc criteria with pagination",
-                "operationId": "bad8c4677dbb35e86bd79083a9686368",
+                "description": "Search books by author, title, tag, or misc criteria with pagination. All parameters are optional. Default: list all books ordered by id DESC, page 1",
+                "operationId": "068b02f84fcf113e83be348c3b1a58bf",
                 "parameters": [
                     {
                         "name": "type",
                         "in": "path",
-                        "description": "Search type: author, title, tag, misc",
-                        "required": true,
+                        "description": "Search type: author, title, tag, misc, id (default: id)",
+                        "required": false,
                         "schema": {
                             "type": "string",
+                            "default": "id",
                             "enum": [
                                 "author",
                                 "title",
                                 "tag",
-                                "misc"
+                                "misc",
+                                "id"
                             ],
                             "example": "author"
                         }
@@ -1153,8 +1209,8 @@
                     {
                         "name": "value",
                         "in": "path",
-                        "description": "Search value",
-                        "required": true,
+                        "description": "Search value (optional for type=id)",
+                        "required": false,
                         "schema": {
                             "type": "string",
                             "example": "卡尔维诺"
@@ -1163,10 +1219,11 @@
                     {
                         "name": "page",
                         "in": "path",
-                        "description": "Page number (1-based)",
-                        "required": true,
+                        "description": "Page number (1-based, default: 1)",
+                        "required": false,
                         "schema": {
                             "type": "integer",
+                            "default": 1,
                             "minimum": 1,
                             "example": 1
                         }
@@ -1263,6 +1320,98 @@
                                                 }
                                             },
                                             "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/books/{bookid}/tags": {
+            "post": {
+                "tags": [
+                    "Book Management"
+                ],
+                "summary": "Add tags to a book",
+                "description": "Add one or more tags to a book. Duplicate tags are ignored.",
+                "operationId": "beb0d1b56bd77e4b5399290df112d80f",
+                "parameters": [
+                    {
+                        "name": "bookid",
+                        "in": "path",
+                        "description": "Book ID (5 digits)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[0-9]{5}$",
+                            "example": "00666"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "经典",
+                                            "文学",
+                                            "推荐"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tags added successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tags added successfully"
+                                        },
+                                        "added_tags": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "example": [
+                                                "经典",
+                                                "文学"
+                                            ]
+                                        },
+                                        "duplicate_tags": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "example": [
+                                                "推荐"
+                                            ]
                                         }
                                     },
                                     "type": "object"
@@ -1689,13 +1838,13 @@
                     {
                         "name": "count",
                         "in": "path",
-                        "description": "Number of latest readings to return (defaults to 5)",
+                        "description": "Number of latest readings to return (defaults to 1)",
                         "required": false,
                         "schema": {
                             "type": "integer",
                             "maximum": 50,
                             "minimum": 1,
-                            "example": 5
+                            "example": 1
                         }
                     },
                     {
@@ -1724,41 +1873,33 @@
                                             "type": "array",
                                             "items": {
                                                 "properties": {
-                                                    "hid": {
-                                                        "type": "integer",
-                                                        "example": 123
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "My Review Title"
                                                     },
-                                                    "bid": {
-                                                        "type": "integer",
-                                                        "example": 456
+                                                    "datein": {
+                                                        "type": "string",
+                                                        "example": "2025-07-14"
+                                                    },
+                                                    "uri": {
+                                                        "type": "string",
+                                                        "example": "/reviews/my-review"
+                                                    },
+                                                    "feature": {
+                                                        "type": "string",
+                                                        "example": "feature-image.jpg"
                                                     },
                                                     "bookid": {
                                                         "type": "string",
                                                         "example": "01234"
                                                     },
-                                                    "title": {
+                                                    "book_title": {
                                                         "type": "string",
-                                                        "example": "Book Title"
-                                                    },
-                                                    "author": {
-                                                        "type": "string",
-                                                        "example": "Author Name"
-                                                    },
-                                                    "reviewtitle": {
-                                                        "type": "string",
-                                                        "example": "My thoughts on this book"
-                                                    },
-                                                    "create_at": {
-                                                        "type": "string",
-                                                        "example": "2025-07-14"
+                                                        "example": "Book Being Reviewed"
                                                     },
                                                     "cover_uri": {
                                                         "type": "string",
                                                         "example": "https://api.rsywx.com/covers/01234.jpg"
-                                                    },
-                                                    "reviews_count": {
-                                                        "type": "integer",
-                                                        "example": 3
                                                     }
                                                 },
                                                 "type": "object"
@@ -1841,6 +1982,10 @@
         {
             "name": "Book Lists",
             "description": "Book Lists"
+        },
+        {
+            "name": "Book Management",
+            "description": "Book Management"
         },
         {
             "name": "Miscellaneous",

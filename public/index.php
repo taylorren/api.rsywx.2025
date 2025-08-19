@@ -135,6 +135,9 @@ $app->group('/api/' . $_ENV['API_VERSION'], function ($group) {
 
     // Book list/search endpoint
     $group->get('/books/list[/{type}[/{value}[/{page:[0-9]+}]]]', \App\Controllers\BookController::class . ':listBooks');
+    
+    // Tag management endpoint
+    $group->post('/books/{bookid:[0-9]{5}}/tags', \App\Controllers\BookController::class . ':addTags');
 
     // Reading statistics endpoints
     $group->get('/readings/summary', \App\Controllers\ReadingController::class . ':summary');

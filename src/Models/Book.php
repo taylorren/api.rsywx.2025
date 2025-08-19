@@ -44,6 +44,9 @@ class Book
         // Always get fresh visit data
         $visitData = $this->getBookVisitData($bookData['id']);
 
+        // Update visit record when book is accessed
+        $this->updateVisit($bookData['id']);
+
         // Merge cached book data with fresh visit data
         return [
             'data' => array_merge($bookData, $visitData),
@@ -53,9 +56,12 @@ class Book
 
     private function fetchBookDataFromDb($bookid)
     {
-        // Get book with publisher and place names
+        // Get complete book information with all related data - FULL COVERAGE
         $query = "
-            SELECT b.*, 
+            SELECT b.id, b.bookid, b.title, b.author, b.region, b.copyrighter, 
+                   b.translated, b.purchdate, b.price, b.pubdate, b.printdate,
+                   b.ver, b.deco, b.kword, b.page, b.isbn, b.category, 
+                   b.ol, b.intro, b.instock, b.location,
                    p.name as place_name, 
                    pub.name as publisher_name
             FROM book_book b
@@ -78,8 +84,26 @@ class Book
         // Get reviews for this book
         $book['reviews'] = $this->getBookReviews($book['id']);
 
-        // Add cover page URI
+        // Add generated cover URI
         $book['cover_uri'] = "https://api.rsywx.com/covers/{$book['bookid']}.jpg";
+
+        // Convert fields to proper types for complete coverage
+        $book['id'] = (int)$book['id'];
+        $book['translated'] = (bool)$book['translated'];
+        $book['instock'] = (bool)$book['instock'];
+
+        // Numeric fields with null handling
+        $book['price'] = $book['price'] !== null ? (float)$book['price'] : null;
+        $book['kword'] = $book['kword'] !== null ? (int)$book['kword'] : null;
+        $book['page'] = $book['page'] !== null ? (int)$book['page'] : null;
+
+        // String fields with null handling (ensure consistent null values)
+        $book['copyrighter'] = $book['copyrighter'] ?: null;
+        $book['category'] = $book['category'] ?: null;
+        $book['ol'] = $book['ol'] ?: null;
+        $book['intro'] = $book['intro'] ?: null;
+        $book['ver'] = $book['ver'] ?: null;
+        $book['deco'] = $book['deco'] ?: null;
 
         return $book;
     }
@@ -153,9 +177,9 @@ class Book
                 ->includeFields(['purchase'])
                 ->latest($count)
                 ->execute();
-            
+
             // Convert to array format for caching
-            $booksData = array_map(function($book) {
+            $booksData = array_map(function ($book) {
                 return $book->toArray();
             }, $books);
 
@@ -208,9 +232,9 @@ class Book
                 ->includeFields(['purchase', 'visit_stats'])
                 ->random($count)
                 ->execute();
-            
+
             // Convert to array format for caching
-            $booksData = array_map(function($book) {
+            $booksData = array_map(function ($book) {
                 return $book->toArray();
             }, $books);
 
@@ -253,9 +277,9 @@ class Book
             $books = $queryBuilder
                 ->lastVisited($count)
                 ->execute();
-            
+
             // Convert to array format for caching
-            $booksData = array_map(function($book) {
+            $booksData = array_map(function ($book) {
                 return $book->toArray();
             }, $books);
 
@@ -304,9 +328,9 @@ class Book
                 ->includeFields(['computed'])
                 ->forgotten($count)
                 ->execute();
-            
+
             // Convert to array format for caching
-            $booksData = array_map(function($book) {
+            $booksData = array_map(function ($book) {
                 return $book->toArray();
             }, $books);
 
@@ -365,9 +389,9 @@ class Book
                 ->includeFields(['purchase'])
                 ->todaysBooks($month, $date)
                 ->execute();
-            
+
             // Convert to array format for caching
-            $booksData = array_map(function($book) {
+            $booksData = array_map(function ($book) {
                 return $book->toArray();
             }, $books);
 
@@ -508,10 +532,10 @@ class Book
         if ($perPage === null) {
             $perPage = (int)($_ENV['LIST_PER_PAGE'] ?? 10);
         }
-        
+
         $queryBuilder = new BookQueryBuilder();
         $queryBuilder->includeFields(['purchase', 'rich']);
-        
+
         switch ($type) {
             case 'author':
                 if ($value) $queryBuilder->searchByAuthor($value);
@@ -531,19 +555,19 @@ class Book
                 $queryBuilder->orderBy('b.id DESC');
                 break;
         }
-        
+
         $result = $queryBuilder->paginate($page, $perPage)->execute();
         $total = $queryBuilder->count();
-        
+
         // Load tags for each book
         foreach ($result as $book) {
             $book->tags = $this->getBookTags($book->id);
         }
-        
-        $books = array_map(function($book) {
+
+        $books = array_map(function ($book) {
             return $book->toArray();
         }, $result);
-        
+
         return [
             'data' => $books,
             'pagination' => [
@@ -552,6 +576,162 @@ class Book
                 'total_results' => $total,
                 'per_page' => $perPage
             ]
+        ];
+    }
+
+    private function updateVisit($bookId)
+    {
+        // Get client IP address
+        $ipAddress = $this->getClientIpAddress();
+        
+        // Get geolocation data for the IP
+        $geoData = $this->getIpGeolocation($ipAddress);
+
+        $query = "
+            INSERT INTO book_visit (bookid, visitwhen, ip_address, country, city, region)
+            VALUES (?, NOW(), ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+            visitwhen = NOW(),
+            ip_address = VALUES(ip_address),
+            country = VALUES(country),
+            city = VALUES(city),
+            region = VALUES(region)
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([
+            $bookId, 
+            $ipAddress, 
+            $geoData['country'], 
+            $geoData['city'], 
+            $geoData['region']
+        ]);
+    }
+
+    private function getClientIpAddress()
+    {
+        // Check for various headers that might contain the real IP
+        $ipHeaders = [
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_REAL_IP',
+            'HTTP_CF_CONNECTING_IP', // Cloudflare
+            'HTTP_CLIENT_IP',
+            'HTTP_X_FORWARDED',
+            'HTTP_FORWARDED_FOR',
+            'HTTP_FORWARDED',
+            'REMOTE_ADDR'
+        ];
+
+        foreach ($ipHeaders as $header) {
+            if (!empty($_SERVER[$header])) {
+                $ips = explode(',', $_SERVER[$header]);
+                $ip = trim($ips[0]); // Take the first IP if multiple
+                
+                // Validate IP address
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return $ip;
+                }
+            }
+        }
+
+        // Fallback to REMOTE_ADDR even if it's private/reserved
+        return $_SERVER['REMOTE_ADDR'] ?? null;
+    }
+
+    private function getIpGeolocation($ipAddress)
+    {
+        // Default values
+        $defaultGeo = [
+            'country' => null,
+            'city' => null,
+            'region' => null
+        ];
+
+        // Skip geolocation for local/private IPs
+        if (!$ipAddress || 
+            filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            return $defaultGeo;
+        }
+
+        try {
+            // Use ip-api.com (free service, 1000 requests/month limit)
+            // Alternative services: ipinfo.io, ipgeolocation.io, etc.
+            $url = "http://ip-api.com/json/{$ipAddress}?fields=status,country,regionName,city";
+            
+            $context = stream_context_create([
+                'http' => [
+                    'timeout' => 3, // 3 second timeout
+                    'user_agent' => 'RSYWX-Library-API/1.0'
+                ]
+            ]);
+
+            $response = @file_get_contents($url, false, $context);
+            
+            if ($response === false) {
+                return $defaultGeo;
+            }
+
+            $data = json_decode($response, true);
+            
+            if (!$data || $data['status'] !== 'success') {
+                return $defaultGeo;
+            }
+
+            return [
+                'country' => $data['country'] ?? null,
+                'city' => $data['city'] ?? null,
+                'region' => $data['regionName'] ?? null
+            ];
+
+        } catch (\Exception $e) {
+            // Log error if needed, but don't fail the visit tracking
+            error_log("IP Geolocation failed for {$ipAddress}: " . $e->getMessage());
+            return $defaultGeo;
+        }
+    }
+
+    public function addBookTags($bookid, $tags)
+    {
+        // First, get the book's internal ID
+        $query = "SELECT id FROM book_book WHERE bookid = ? AND location NOT IN ('na', '--')";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$bookid]);
+        $book = $stmt->fetch();
+
+        if (!$book) {
+            throw new \InvalidArgumentException('Book not found');
+        }
+
+        $bookId = $book['id'];
+        $addedTags = [];
+        $duplicateTags = [];
+
+        foreach ($tags as $tag) {
+            $tag = trim($tag);
+            if (empty($tag)) {
+                continue;
+            }
+
+            // Check if tag already exists for this book
+            $checkQuery = "SELECT COUNT(*) as count FROM book_taglist WHERE bid = ? AND tag = ?";
+            $checkStmt = $this->db->prepare($checkQuery);
+            $checkStmt->execute([$bookId, $tag]);
+            $exists = $checkStmt->fetch()['count'] > 0;
+
+            if ($exists) {
+                $duplicateTags[] = $tag;
+            } else {
+                // Insert new tag
+                $insertQuery = "INSERT INTO book_taglist (bid, tag) VALUES (?, ?)";
+                $insertStmt = $this->db->prepare($insertQuery);
+                $insertStmt->execute([$bookId, $tag]);
+                $addedTags[] = $tag;
+            }
+        }
+
+        return [
+            'added' => $addedTags,
+            'duplicates' => $duplicateTags
         ];
     }
 }

@@ -87,9 +87,9 @@ class ReadingController
     #[OA\Parameter(
         name: "count",
         in: "path",
-        description: "Number of latest readings to return (defaults to 5)",
+        description: "Number of latest readings to return (defaults to 1)",
         required: false,
-        schema: new OA\Schema(type: "integer", minimum: 1, maximum: 50, example: 5)
+        schema: new OA\Schema(type: "integer", minimum: 1, maximum: 50, example: 1)
     )]
     #[OA\Parameter(
         name: "refresh",
@@ -110,15 +110,13 @@ class ReadingController
                     items: new OA\Items(
                         type: "object",
                         properties: [
-                            "hid" => new OA\Property(property: "hid", type: "integer", example: 123),
-                            "bid" => new OA\Property(property: "bid", type: "integer", example: 456),
+                            "title" => new OA\Property(property: "title", type: "string", example: "My Review Title"),
+                            "datein" => new OA\Property(property: "datein", type: "string", example: "2025-07-14"),
+                            "uri" => new OA\Property(property: "uri", type: "string", example: "/reviews/my-review"),
+                            "feature" => new OA\Property(property: "feature", type: "string", example: "feature-image.jpg"),
                             "bookid" => new OA\Property(property: "bookid", type: "string", example: "01234"),
-                            "title" => new OA\Property(property: "title", type: "string", example: "Book Title"),
-                            "author" => new OA\Property(property: "author", type: "string", example: "Author Name"),
-                            "reviewtitle" => new OA\Property(property: "reviewtitle", type: "string", example: "My thoughts on this book"),
-                            "create_at" => new OA\Property(property: "create_at", type: "string", example: "2025-07-14"),
-                            "cover_uri" => new OA\Property(property: "cover_uri", type: "string", example: "https://api.rsywx.com/covers/01234.jpg"),
-                            "reviews_count" => new OA\Property(property: "reviews_count", type: "integer", example: 3)
+                            "book_title" => new OA\Property(property: "book_title", type: "string", example: "Book Being Reviewed"),
+                            "cover_uri" => new OA\Property(property: "cover_uri", type: "string", example: "https://api.rsywx.com/covers/01234.jpg")
                         ]
                     )
                 ),
@@ -129,7 +127,7 @@ class ReadingController
     public function latest(Request $request, Response $response, $args)
     {
         try {
-            $count = isset($args['count']) ? (int)$args['count'] : 5;
+            $count = isset($args['count']) ? (int)$args['count'] : 1;
             $count = max(1, min(50, $count)); // Ensure count is between 1 and 50
             
             $queryParams = $request->getQueryParams();

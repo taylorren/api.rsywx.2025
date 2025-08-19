@@ -21,6 +21,21 @@ class BookResponse
     public $place_name = null;
     public $publisher_name = null;
 
+    // Publication information (optional)
+    public $pubdate = null;
+    public $printdate = null;
+    public $ver = null;
+    public $deco = null;
+    public $isbn = null;
+    public $category = null;
+    public $ol = null;
+
+    // Book details (optional)
+    public $kword = null;
+    public $page = null;
+    public $intro = null;
+    public $instock = null;
+
     // Visit information (optional)
     public $total_visits = null;
     public $last_visited = null;
@@ -117,11 +132,26 @@ class BookResponse
             'copyrighter',
             'region',
             'location',
+            'pubdate',
+            'printdate',
+            'ver',
+            'deco',
+            'isbn',
+            'category',
+            'ol',
+            'kword',
+            'page',
+            'intro',
+            'instock',
+            'place_name',
+            'publisher_name',
             'total_visits',
             'last_visited',
             'visit_country',
             'days_since_visit',
-            'years_ago'
+            'years_ago',
+            'tags',
+            'reviews'
         ];
 
         foreach ($directFields as $field) {

@@ -95,7 +95,7 @@ class Reading
         ];
     }
 
-    public function getLatestReadings($count = 5, $forceRefresh = false)
+    public function getLatestReadings($count = 1, $forceRefresh = false)
     {
         $cacheKey = "latest_readings_{$count}";
 
@@ -127,21 +127,13 @@ class Reading
     private function fetchLatestReadingsFromDb($count)
     {
         $query = "
-            SELECT 
-                h.hid,
-                h.bid,
-                b.bookid,
-                b.title,
-                b.author,
-                h.reviewtitle,
-                h.create_at,
-                COUNT(r.id) as reviews_count
-            FROM book_headline h
+            SELECT r.title, r.datein, r.uri, r.feature,
+                   b.bookid, b.title as book_title
+            FROM book_review r
+            INNER JOIN book_headline h ON r.hid = h.hid
             INNER JOIN book_book b ON h.bid = b.id
-            LEFT JOIN book_review r ON h.hid = r.hid
             WHERE h.display = 1
-            GROUP BY h.hid, h.bid, b.bookid, b.title, b.author, h.reviewtitle, h.create_at
-            ORDER BY h.create_at DESC
+            ORDER BY r.datein DESC
             LIMIT ?
         ";
 
@@ -149,12 +141,9 @@ class Reading
         $stmt->execute([$count]);
         $readings = $stmt->fetchAll();
 
-        // Add cover URI to each reading
+        // Add cover URI for the book being reviewed
         foreach ($readings as &$reading) {
             $reading['cover_uri'] = "https://api.rsywx.com/covers/{$reading['bookid']}.jpg";
-            $reading['reviews_count'] = (int)$reading['reviews_count'];
-            $reading['hid'] = (int)$reading['hid'];
-            $reading['bid'] = (int)$reading['bid'];
         }
 
         return $readings;

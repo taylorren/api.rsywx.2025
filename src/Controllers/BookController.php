@@ -138,6 +138,19 @@ class BookController
                         "copyrighter" => new OA\Property(property: "copyrighter", type: "string", example: "译林出版社", nullable: true),
                         "region" => new OA\Property(property: "region", type: "string", example: "意大利"),
                         "location" => new OA\Property(property: "location", type: "string", example: "书房"),
+                        "purchdate" => new OA\Property(property: "purchdate", type: "string", example: "2020-05-15"),
+                        "price" => new OA\Property(property: "price", type: "number", example: 45.00),
+                        "pubdate" => new OA\Property(property: "pubdate", type: "string", example: "2019-03-01"),
+                        "printdate" => new OA\Property(property: "printdate", type: "string", example: "2019-03-15"),
+                        "ver" => new OA\Property(property: "ver", type: "string", example: "1"),
+                        "deco" => new OA\Property(property: "deco", type: "string", example: "精装"),
+                        "isbn" => new OA\Property(property: "isbn", type: "string", example: "978-7-5447-6789-0"),
+                        "category" => new OA\Property(property: "category", type: "string", example: "文学", nullable: true),
+                        "ol" => new OA\Property(property: "ol", type: "string", example: "cn", nullable: true),
+                        "kword" => new OA\Property(property: "kword", type: "integer", example: 120),
+                        "page" => new OA\Property(property: "page", type: "integer", example: 280),
+                        "intro" => new OA\Property(property: "intro", type: "string", example: "Book introduction text"),
+                        "instock" => new OA\Property(property: "instock", type: "boolean", example: true),
                         "publisher_name" => new OA\Property(property: "publisher_name", type: "string", example: "花城出版社"),
                         "place_name" => new OA\Property(property: "place_name", type: "string", example: "上海"),
                         "tags" => new OA\Property(property: "tags", type: "array", items: new OA\Items(type: "string"), example: ["意大利", "散文", "文学", "经典"]),
@@ -842,32 +855,32 @@ class BookController
     }
 
     #[OA\Get(
-        path: "/books/list/{type}/{value}/{page}",
+        path: "/books/list/{type?}/{value?}/{page?}",
         summary: "List/search books",
-        description: "Search books by author, title, tag, or misc criteria with pagination",
+        description: "Search books by author, title, tag, or misc criteria with pagination. All parameters are optional. Default: list all books ordered by id DESC, page 1",
         tags: ["Book Lists"],
         security: [["ApiKeyAuth" => []]]
     )]
     #[OA\Parameter(
         name: "type",
         in: "path",
-        description: "Search type: author, title, tag, misc",
-        required: true,
-        schema: new OA\Schema(type: "string", enum: ["author", "title", "tag", "misc"], example: "author")
+        description: "Search type: author, title, tag, misc, id (default: id)",
+        required: false,
+        schema: new OA\Schema(type: "string", enum: ["author", "title", "tag", "misc", "id"], example: "author", default: "id")
     )]
     #[OA\Parameter(
         name: "value",
         in: "path",
-        description: "Search value",
-        required: true,
+        description: "Search value (optional for type=id)",
+        required: false,
         schema: new OA\Schema(type: "string", example: "卡尔维诺")
     )]
     #[OA\Parameter(
         name: "page",
         in: "path",
-        description: "Page number (1-based)",
-        required: true,
-        schema: new OA\Schema(type: "integer", minimum: 1, example: 1)
+        description: "Page number (1-based, default: 1)",
+        required: false,
+        schema: new OA\Schema(type: "integer", minimum: 1, example: 1, default: 1)
     )]
     #[OA\Response(
         response: 200,
@@ -934,6 +947,89 @@ class BookController
             
             $response->getBody()->write(json_encode($errorData));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    #[OA\Post(
+        path: "/books/{bookid}/tags",
+        summary: "Add tags to a book",
+        description: "Add one or more tags to a book. Duplicate tags are ignored.",
+        tags: ["Book Management"],
+        security: [["ApiKeyAuth" => []]]
+    )]
+    #[OA\Parameter(
+        name: "bookid",
+        in: "path",
+        description: "Book ID (5 digits)",
+        required: true,
+        schema: new OA\Schema(type: "string", pattern: "^[0-9]{5}$", example: "00666")
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            properties: [
+                "tags" => new OA\Property(
+                    property: "tags",
+                    type: "array",
+                    items: new OA\Items(type: "string"),
+                    example: ["经典", "文学", "推荐"]
+                )
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Tags added successfully",
+        content: new OA\JsonContent(
+            properties: [
+                "success" => new OA\Property(property: "success", type: "boolean", example: true),
+                "message" => new OA\Property(property: "message", type: "string", example: "Tags added successfully"),
+                "added_tags" => new OA\Property(
+                    property: "added_tags",
+                    type: "array",
+                    items: new OA\Items(type: "string"),
+                    example: ["经典", "文学"]
+                ),
+                "duplicate_tags" => new OA\Property(
+                    property: "duplicate_tags",
+                    type: "array",
+                    items: new OA\Items(type: "string"),
+                    example: ["推荐"]
+                )
+            ]
+        )
+    )]
+    public function addTags(Request $request, Response $response, $args)
+    {
+        try {
+            $bookid = $args['bookid'];
+            $body = $request->getBody()->getContents();
+            $data = json_decode($body, true);
+            
+            if (!isset($data['tags']) || !is_array($data['tags'])) {
+                throw new \InvalidArgumentException('Tags array is required');
+            }
+            
+            $bookModel = new Book();
+            $result = $bookModel->addBookTags($bookid, $data['tags']);
+            
+            $responseData = [
+                'success' => true,
+                'message' => 'Tags processed successfully',
+                'added_tags' => $result['added'],
+                'duplicate_tags' => $result['duplicates']
+            ];
+            
+            $response->getBody()->write(json_encode($responseData));
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $errorData = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            
+            $response->getBody()->write(json_encode($errorData));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
     }
 }
