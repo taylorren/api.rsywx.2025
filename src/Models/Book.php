@@ -527,7 +527,7 @@ class Book
         return $this->cache->clear();
     }
 
-    public function listBooks($type = 'id', $value = null, $page = 1, $perPage = null)
+    public function listBooks($type = 'title', $value = '-', $page = 1, $perPage = null)
     {
         if ($perPage === null) {
             $perPage = (int)($_ENV['LIST_PER_PAGE'] ?? 10);
@@ -535,25 +535,26 @@ class Book
 
         $queryBuilder = new BookQueryBuilder();
         $queryBuilder->includeFields(['purchase', 'rich']);
+        
+        // Always order by ID desc (latest books first)
+        $queryBuilder->orderBy('b.id DESC');
 
-        switch ($type) {
-            case 'author':
-                if ($value) $queryBuilder->searchByAuthor($value);
-                break;
-            case 'title':
-                if ($value) $queryBuilder->searchByTitle($value);
-                break;
-            case 'tag':
-                if ($value) $queryBuilder->searchByTag($value);
-                break;
-            case 'misc':
-                if ($value) $queryBuilder->searchMisc($value);
-                break;
-            case 'id':
-            default:
-                // Default: order by id desc (latest books first)
-                $queryBuilder->orderBy('b.id DESC');
-                break;
+        // Apply search filter if value is not a wildcard
+        if ($value !== '-') {
+            switch ($type) {
+                case 'author':
+                    $queryBuilder->searchByAuthor($value);
+                    break;
+                case 'title':
+                    $queryBuilder->searchByTitle($value);
+                    break;
+                case 'tags':
+                    $queryBuilder->searchByTag($value);
+                    break;
+                case 'misc':
+                    $queryBuilder->searchMisc($value);
+                    break;
+            }
         }
 
         $result = $queryBuilder->paginate($page, $perPage)->execute();

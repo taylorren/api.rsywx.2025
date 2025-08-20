@@ -125,6 +125,7 @@ $app->group('/api/' . $_ENV['API_VERSION'], function ($group) {
     $group->get('/books/today/{month:[0-9]+}/{date:[0-9]+}', \App\Controllers\BookController::class . ':todayWithParams');
     $group->get('/books/today', \App\Controllers\BookController::class . ':today');
     $group->get('/books/visit_history', \App\Controllers\BookController::class . ':visitHistory');
+    $group->get('/books/list[/{type}[/{value}[/{page:[0-9]+}]]]', \App\Controllers\BookController::class . ':listBooks');
     $group->get('/books/{bookid:[0-9]{5}}', \App\Controllers\BookController::class . ':show');
 
     // Miscellaneous endpoints
@@ -132,9 +133,6 @@ $app->group('/api/' . $_ENV['API_VERSION'], function ($group) {
     $group->get('/misc/qotd', \App\Controllers\MiscController::class . ':qotd');
     $group->get('/misc/weather/current', \App\Controllers\MiscController::class . ':currentWeather');
     $group->get('/misc/weather/forecast', \App\Controllers\MiscController::class . ':weatherForecast');
-
-    // Book list/search endpoint
-    $group->get('/books/list[/{type}[/{value}[/{page:[0-9]+}]]]', \App\Controllers\BookController::class . ':listBooks');
     
     // Tag management endpoint
     $group->post('/books/{bookid:[0-9]{5}}/tags', \App\Controllers\BookController::class . ':addTags');

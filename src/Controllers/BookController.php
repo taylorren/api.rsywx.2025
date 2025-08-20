@@ -924,9 +924,23 @@ class BookController
     public function listBooks(Request $request, Response $response, $args)
     {
         try {
-            $type = $args['type'] ?? 'id';
-            $value = isset($args['value']) ? urldecode($args['value']) : null;
-            $page = isset($args['page']) ? (int)$args['page'] : 1;
+            // Handle the case where a single numeric parameter is provided (as page number)
+            if (isset($args['type']) && is_numeric($args['type']) && !isset($args['value'])) {
+                $type = 'title';
+                $value = '-';
+                $page = (int)$args['type'];
+            } else {
+                // Set default type to 'title' and validate allowed types
+                $type = $args['type'] ?? 'title';
+                if (!in_array($type, ['title', 'author', 'tags', 'misc'])) {
+                    throw new \InvalidArgumentException("Invalid type. Allowed types are: title, author, tags, misc");
+                }
+
+                // Handle value parameter with special case for '-'
+                $value = isset($args['value']) ? urldecode($args['value']) : '-';  // default to '-' for wildcard
+                
+                $page = isset($args['page']) ? (int)$args['page'] : 1;
+            }
             
             $bookModel = new Book();
             $result = $bookModel->listBooks($type, $value, $page);
@@ -951,7 +965,7 @@ class BookController
     }
 
     #[OA\Post(
-        path: "/books/{bookid}/tags",
+        path: "/books/{sbookid}/tags",
         summary: "Add tags to a book",
         description: "Add one or more tags to a book. Duplicate tags are ignored.",
         tags: ["Book Management"],

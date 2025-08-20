@@ -93,6 +93,8 @@ abstract class BaseTestCase extends TestCase
             $group->get('/books/forgotten[/{count:[0-9]+}]', \App\Controllers\BookController::class . ':forgotten');
             $group->get('/books/today/{month:[0-9]+}/{date:[0-9]+}', \App\Controllers\BookController::class . ':todayWithParams');
             $group->get('/books/today', \App\Controllers\BookController::class . ':today');
+            $group->get('/books/list[/{type}[/{value}[/{page}]]]', \App\Controllers\BookController::class . ':listBooks');
+            $group->get('/books/{type}/{value}/{page}', \App\Controllers\BookController::class . ':listBooks');
             $group->get('/books/{bookid}', \App\Controllers\BookController::class . ':show');
             $group->get('/misc/wotd', \App\Controllers\MiscController::class . ':wordOfTheDay');
             $group->get('/misc/qotd', \App\Controllers\MiscController::class . ':qotd');
