@@ -165,4 +165,95 @@ class Reading
         // For clearing all latest readings cache, we'd need to clear all cache
         return $this->cache->clear();
     }
+
+    public function getReviewsPaginated($page = 1, $perPage = 9, $forceRefresh = false)
+    {
+        $cacheKey = "reviews_paginated_{$page}_{$perPage}";
+
+        // Cache for 1 hour since reviews don't change very frequently
+        $reviewsCacheTtl = 3600; // 1 hour
+
+        // Get cached data
+        $reviewsData = null;
+        if (!$forceRefresh) {
+            $reviewsData = $this->cache->get($cacheKey);
+        }
+
+        $fromCache = ($reviewsData !== null);
+
+        // If not cached, fetch from database
+        if ($reviewsData === null) {
+            $reviewsData = $this->fetchReviewsPaginatedFromDb($page, $perPage);
+
+            // Cache the result
+            $this->cache->set($cacheKey, $reviewsData, $reviewsCacheTtl);
+        }
+
+        return [
+            'data' => $reviewsData['reviews'],
+            'pagination' => $reviewsData['pagination'],
+            'from_cache' => $fromCache
+        ];
+    }
+
+    private function fetchReviewsPaginatedFromDb($page, $perPage)
+    {
+        // First, get total count for pagination
+        $countQuery = "
+            SELECT COUNT(r.id) as total_count
+            FROM book_review r
+            INNER JOIN book_headline h ON r.hid = h.hid
+            WHERE h.display = 1
+        ";
+
+        $stmt = $this->db->prepare($countQuery);
+        $stmt->execute();
+        $totalCount = (int)$stmt->fetch()['total_count'];
+
+        // Calculate pagination info
+        $totalPages = ceil($totalCount / $perPage);
+        $offset = ($page - 1) * $perPage;
+
+        // Get the reviews for current page
+        $reviewsQuery = "
+            SELECT r.title, r.datein, r.uri, r.feature,
+                   b.bookid, b.title as book_title
+            FROM book_review r
+            INNER JOIN book_headline h ON r.hid = h.hid
+            INNER JOIN book_book b ON h.bid = b.id
+            WHERE h.display = 1
+            ORDER BY r.datein DESC
+            LIMIT ? OFFSET ?
+        ";
+
+        $stmt = $this->db->prepare($reviewsQuery);
+        $stmt->execute([$perPage, $offset]);
+        $reviews = $stmt->fetchAll();
+
+        // Add cover URI for each book being reviewed
+        foreach ($reviews as &$review) {
+            $review['cover_uri'] = "https://api.rsywx.com/covers/{$review['bookid']}.jpg";
+        }
+
+        return [
+            'reviews' => $reviews,
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'total_results' => $totalCount,
+                'per_page' => $perPage
+            ]
+        ];
+    }
+
+    public function clearReviewsPaginatedCache($page = null, $perPage = null)
+    {
+        if ($page !== null && $perPage !== null) {
+            $cacheKey = "reviews_paginated_{$page}_{$perPage}";
+            return $this->cache->delete($cacheKey);
+        }
+
+        // For clearing all paginated reviews cache, we'd need to clear all cache
+        return $this->cache->clear();
+    }
 }

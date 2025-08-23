@@ -154,4 +154,93 @@ class ReadingController
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
+
+    #[OA\Get(
+        path: "/readings/reviews/{page}",
+        summary: "Get Reviews with Pagination",
+        description: "Returns reviews with pagination support, ordered by date (newest first). Fixed at 9 reviews per page for consistent frontend display.",
+        tags: ["Reading Statistics"],
+        security: [["ApiKeyAuth" => []]]
+    )]
+    #[OA\Parameter(
+        name: "page",
+        in: "path",
+        description: "Page number (defaults to 1)",
+        required: false,
+        schema: new OA\Schema(type: "integer", minimum: 1, example: 1)
+    )]
+    #[OA\Parameter(
+        name: "refresh",
+        in: "query",
+        description: "Force refresh cache",
+        required: false,
+        schema: new OA\Schema(type: "boolean", example: false)
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Paginated reviews",
+        content: new OA\JsonContent(
+            properties: [
+                "success" => new OA\Property(property: "success", type: "boolean", example: true),
+                "data" => new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(
+                        type: "object",
+                        properties: [
+                            "title" => new OA\Property(property: "title", type: "string", example: "My Review Title"),
+                            "datein" => new OA\Property(property: "datein", type: "string", example: "2025-07-14"),
+                            "uri" => new OA\Property(property: "uri", type: "string", example: "https://blog.rsywx.net/2025/07/14/my-review/"),
+                            "feature" => new OA\Property(property: "feature", type: "string", example: "https://blog.rsywx.net/wp-content/uploads/2025/07/feature.jpg"),
+                            "bookid" => new OA\Property(property: "bookid", type: "string", example: "01234"),
+                            "book_title" => new OA\Property(property: "book_title", type: "string", example: "Book Being Reviewed"),
+                            "cover_uri" => new OA\Property(property: "cover_uri", type: "string", example: "https://api.rsywx.com/covers/01234.jpg")
+                        ]
+                    )
+                ),
+                "pagination" => new OA\Property(
+                    property: "pagination",
+                    type: "object",
+                    properties: [
+                        "current_page" => new OA\Property(property: "current_page", type: "integer", example: 1),
+                        "total_pages" => new OA\Property(property: "total_pages", type: "integer", example: 5),
+                        "total_results" => new OA\Property(property: "total_results", type: "integer", example: 42),
+                        "per_page" => new OA\Property(property: "per_page", type: "integer", example: 9)
+                    ]
+                ),
+                "cached" => new OA\Property(property: "cached", type: "boolean", example: true)
+            ]
+        )
+    )]
+    public function reviews(Request $request, Response $response, $args)
+    {
+        try {
+            $page = isset($args['page']) ? max(1, (int)$args['page']) : 1;
+            $perPage = 9; // Fixed per page count - can be changed in code if needed
+            
+            $queryParams = $request->getQueryParams();
+            $forceRefresh = isset($queryParams['refresh']) && $queryParams['refresh'] === 'true';
+            
+            $readingModel = new \App\Models\Reading();
+            $result = $readingModel->getReviewsPaginated($page, $perPage, $forceRefresh);
+            
+            $data = [
+                'success' => true,
+                'data' => $result['data'],
+                'pagination' => $result['pagination'],
+                'cached' => $result['from_cache']
+            ];
+            
+            $response->getBody()->write(json_encode($data));
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $errorData = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            
+            $response->getBody()->write(json_encode($errorData));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
 }

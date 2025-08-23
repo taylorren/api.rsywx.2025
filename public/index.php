@@ -140,6 +140,7 @@ $app->group('/api/' . $_ENV['API_VERSION'], function ($group) {
     // Reading statistics endpoints
     $group->get('/readings/summary', \App\Controllers\ReadingController::class . ':summary');
     $group->get('/readings/latest[/{count:[0-9]+}]', \App\Controllers\ReadingController::class . ':latest');
+    $group->get('/readings/reviews[/{page:[0-9]+}]', \App\Controllers\ReadingController::class . ':reviews');
 });
 
 $app->run();
