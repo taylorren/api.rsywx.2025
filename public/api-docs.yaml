@@ -475,6 +475,55 @@ paths:
       security:
         -
           ApiKeyAuth: []
+  '/books/{bookid}/related/{count}':
+    get:
+      tags:
+        - 'Book Recommendations'
+      summary: 'Get related books'
+      description: 'Returns books related to the specified book based on tags, author, category, and behavioral patterns'
+      operationId: c7aea506b7954e75813ecbde867b0184
+      parameters:
+        -
+          name: bookid
+          in: path
+          description: 'Book ID (5 digits)'
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]{5}$'
+            example: '00666'
+        -
+          name: count
+          in: path
+          description: 'Number of related books to return (defaults to 5)'
+          required: false
+          schema:
+            type: integer
+            maximum: 20
+            minimum: 1
+            example: 5
+        -
+          name: refresh
+          in: query
+          description: 'Force refresh cache'
+          required: false
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: 'Related books with similarity scores'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { type: array, items: { properties: { book: { properties: { id: { type: integer, example: 1234 }, bookid: { type: string, example: '01234' }, title: { type: string, example: 相关书籍标题 }, author: { type: string, example: 作者姓名 }, tags: { type: array, items: { type: string } }, cover_uri: { type: string, example: 'https://api.rsywx.com/covers/01234.jpg' } }, type: object }, similarity_score: { type: number, example: 0.87 }, relationship_reasons: { type: array, items: { type: string }, example: ['共同标签: 文学, 经典', 同一作者] } }, type: object } }
+                  algorithm_info: { properties: { primary_factors: { type: array, items: { type: string } }, computation_time: { type: string, example: 12ms }, cached: { type: boolean, example: false } }, type: object }
+                type: object
+      security:
+        -
+          ApiKeyAuth: []
   /misc/wotd:
     get:
       tags:
@@ -751,6 +800,9 @@ tags:
   -
     name: 'Book Management'
     description: 'Book Management'
+  -
+    name: 'Book Recommendations'
+    description: 'Book Recommendations'
   -
     name: Miscellaneous
     description: Miscellaneous

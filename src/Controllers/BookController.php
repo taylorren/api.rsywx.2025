@@ -1046,4 +1046,129 @@ class BookController
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
     }
+
+    #[OA\Get(
+        path: "/books/{bookid}/related/{count}",
+        summary: "Get related books",
+        description: "Returns books related to the specified book based on tags, author, category, and behavioral patterns",
+        tags: ["Book Recommendations"],
+        security: [["ApiKeyAuth" => []]]
+    )]
+    #[OA\Parameter(
+        name: "bookid",
+        in: "path",
+        description: "Book ID (5 digits)",
+        required: true,
+        schema: new OA\Schema(type: "string", pattern: "^[0-9]{5}$", example: "00666")
+    )]
+    #[OA\Parameter(
+        name: "count",
+        in: "path",
+        description: "Number of related books to return (defaults to 5)",
+        required: false,
+        schema: new OA\Schema(type: "integer", minimum: 1, maximum: 20, example: 5)
+    )]
+    #[OA\Parameter(
+        name: "refresh",
+        in: "query",
+        description: "Force refresh cache",
+        required: false,
+        schema: new OA\Schema(type: "boolean", example: false)
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Related books with similarity scores",
+        content: new OA\JsonContent(
+            properties: [
+                "success" => new OA\Property(property: "success", type: "boolean", example: true),
+                "data" => new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(
+                        type: "object",
+                        properties: [
+                            "book" => new OA\Property(
+                                property: "book",
+                                type: "object",
+                                properties: [
+                                    "id" => new OA\Property(property: "id", type: "integer", example: 1234),
+                                    "bookid" => new OA\Property(property: "bookid", type: "string", example: "01234"),
+                                    "title" => new OA\Property(property: "title", type: "string", example: "相关书籍标题"),
+                                    "author" => new OA\Property(property: "author", type: "string", example: "作者姓名"),
+                                    "tags" => new OA\Property(property: "tags", type: "array", items: new OA\Items(type: "string")),
+                                    "cover_uri" => new OA\Property(property: "cover_uri", type: "string", example: "https://api.rsywx.com/covers/01234.jpg")
+                                ]
+                            ),
+                            "similarity_score" => new OA\Property(property: "similarity_score", type: "number", example: 0.87),
+                            "relationship_reasons" => new OA\Property(
+                                property: "relationship_reasons",
+                                type: "array",
+                                items: new OA\Items(type: "string"),
+                                example: ["共同标签: 文学, 经典", "同一作者"]
+                            )
+                        ]
+                    )
+                ),
+                "algorithm_info" => new OA\Property(
+                    property: "algorithm_info",
+                    type: "object",
+                    properties: [
+                        "primary_factors" => new OA\Property(property: "primary_factors", type: "array", items: new OA\Items(type: "string")),
+                        "computation_time" => new OA\Property(property: "computation_time", type: "string", example: "12ms"),
+                        "cached" => new OA\Property(property: "cached", type: "boolean", example: false)
+                    ]
+                )
+            ]
+        )
+    )]
+    public function getRelatedBooks(Request $request, Response $response, $args)
+    {
+        try {
+            $startTime = microtime(true);
+            $bookid = $args['bookid'];
+            $count = isset($args['count']) ? (int)$args['count'] : 5;
+            $count = max(1, min(20, $count)); // Ensure count is between 1 and 20
+
+            $queryParams = $request->getQueryParams();
+            $forceRefresh = isset($queryParams['refresh']) && $queryParams['refresh'] === 'true';
+
+            $bookModel = new Book();
+            $result = $bookModel->getRelatedBooks($bookid, $count, $forceRefresh);
+
+            if ($result === null) {
+                $errorData = [
+                    'success' => false,
+                    'message' => 'Book not found'
+                ];
+
+                $response->getBody()->write(json_encode($errorData));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+
+            $computationTime = round((microtime(true) - $startTime) * 1000, 2);
+
+            $data = [
+                'success' => true,
+                'data' => $result['data'],
+                'categories' => $result['categories'] ?? [],
+                'discovery_info' => $result['discovery_info'] ?? [],
+                'algorithm_info' => [
+                    'primary_factors' => $result['primary_factors'],
+                    'computation_time' => $computationTime . 'ms',
+                    'cached' => $result['from_cache']
+                ]
+            ];
+
+            $response->getBody()->write(json_encode($data));
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $errorData = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+
+            $response->getBody()->write(json_encode($errorData));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
 }
