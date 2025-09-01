@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSYWX API 2025 - Complete Wiki</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+        }
+        h1, h2, h3 { color: #2c3e50; }
+        h1 { border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { border-bottom: 2px solid #ecf0f1; padding-bottom: 5px; }
+        code { 
+            background: #f8f9fa; 
+            padding: 2px 4px; 
+            border-radius: 3px; 
+            font-family: "Monaco", monospace;
+        }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 5px; 
+            overflow-x: auto; 
+            border-left: 4px solid #3498db;
+        }
+        .toc {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .toc ul { margin: 0; }
+        .export-info {
+            background: #e8f6f3;
+            border: 1px solid #16a085;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body><div class="export-info"><strong>📚 Complete Repository Wiki Export</strong><br>Generated on: 2025-08-23 12:24:25</div><p><h1>RSYWX API 2025 - Complete Repository Wiki</h1></p><p>**Generated on:** 2025-08-23 12:24:25</p><p>---</p><p><h2>Table of Contents</h2></p><p>1. [Project Overview](#project-overview)
+2. [Project Structure](#project-structure)
+3. [API Documentation](#api-documentation)
+4. [Database Information](#database-information)
+5. [Dependencies](#dependencies)
+6. [Configuration](#configuration)
+7. [Testing](#testing)</p><p>---</p><p><h1>Project Overview</h1></p><p><h1>RSYWX API 2025</h1></p><p>A PHP + Slim Framework API for personal library management system.</p><p><h2>Features</h2></p><p>- **Book Collection Status** - Get total books, pages, keywords, and visits
+<ul><li>**Book Details** - Retrieve detailed book information by book ID</li>
+<li>**Smart Caching** - 24-hour TTL for static data, real-time for dynamic data</li>
+<li>**API Key Authentication** - Secure access control</li>
+<li>**Apache Integration** - Ready for production deployment</p><p><h2>API Documentation</h2></p><p>Visit the root URL (<code>/</code>) to access the interactive API documentation with detailed endpoint specifications, request/response examples, and data models.</p><p><h2>API Endpoints</h2></p><p><h3>Collection Status</h3></li>
+<pre><code>GET /api/v1/books/status</code></pre>
+Returns total books, pages, keywords, and visits count.</p><p><h3>Book Details</h3>
+<pre><code>GET /api/v1/books/{bookid}</code></pre>
+Returns detailed book information including:
+<li>Basic book data (title, author, ISBN, etc.)</li>
+<li>Publisher and place names</li>
+<li>Tags and reviews</li>
+<li>Cover image URI</li>
+<li>Visit statistics (real-time)</p><p><h3>Authentication</h3></li>
+All endpoints (except <code>/health</code> and <code>/</code>) require API key authentication via:
+<li>Header: <code>X-API-Key: your-api-key</code></li>
+<li>Query parameter: <code>?api_key=your-api-key</code></p><p><h2>Installation</h2></p><p>1. **Clone the repository**</li>
+   <pre><code>   git clone https://github.com/taylorren/api.rsywx.2025.git
+   cd api.rsywx.2025
+   ``<code></p><p>2. **Install dependencies**
+   </code>`<code>bash
+   composer install
+   </code>`<code></p><p>3. **Configure environment**
+   </code>`<code>bash
+   cp .env.example .env
+   # Edit .env with your database credentials and API key
+   </code>`<code></p><p>4. **Set up Apache virtual host**
+   </code>`<code>bash
+   sudo cp apache-vhost.conf /etc/apache2/sites-available/api.conf
+   sudo a2ensite api.conf
+   sudo a2enmod rewrite headers expires deflate
+   sudo systemctl restart apache2
+   </code>`<code></p><p>5. **Set cache permissions**
+   </code>`<code>bash
+   mkdir -p cache
+   sudo chown -R www-data:www-data cache/
+   </code>`<code></p><p><h2>Configuration</h2></p><p><h3>Environment Variables</h3>
+<li></code>DB_HOST<code> - Database host</li>
+<li></code>DB_NAME<code> - Database name</li>
+<li></code>DB_USER<code> - Database username</li>
+<li></code>DB_PASSWORD<code> - Database password</li>
+<li></code>API_KEY<code> - Your secure API key</p><p><h3>Database Schema</h3></li>
+The API works with the existing RSYWX database schema including:
+<li></code>book_book<code> - Main books table</li>
+<li></code>book_publisher<code> - Publishers</li>
+<li></code>book_place<code> - Storage locations</li>
+<li></code>book_taglist<code> - Book tags</li>
+<li></code>book_review<code> - Book reviews</li>
+<li></code>book_visit<code> - Visit tracking</p><p><h2>Caching</h2></p><p>The API implements intelligent caching:</li>
+<li>**Static data** (book details, tags, reviews) cached for 24 hours</li>
+<li>**Dynamic data** (visit counts, last visited) always fresh</li>
+<li>**Manual refresh** available with </code>?refresh=true<code> parameter</li>
+<li>**File-based cache** stored in </code>/cache<code> directory</p><p><h2>Security</h2></p><p>- API key authentication required</li>
+<li>CORS headers configured</li>
+<li>Security headers (X-Frame-Options, X-Content-Type-Options, etc.)</li>
+<li>Input validation and sanitization</li>
+<li>Error handling without information disclosure</p><p><h2>Development</h2></p><p><h3>Health Check</h3></code></pre>bash</li>
+curl http://your-domain/health
+<pre><code>
+<h3>Testing Endpoints</h3></code></pre>bash
+<h1>Collection status</h1>
+curl -H "X-API-Key: your-key" http://your-domain/api/v1/books/status</p><p><h1>Book details</h1>
+curl -H "X-API-Key: your-key" http://your-domain/api/v1/books/00666
+<pre><code>
+<h2>License</h2></p><p>MIT License</p><p><h2>Author</h2></p><p>Taylor Ren - Personal Library Management System</p><p>---</p><p><h1>Project Structure</h1>
+</code></pre>
+├── public/
+│   ├── .htaccess
+│   ├── api-docs.css
+│   ├── api-docs.html
+│   ├── api-docs.json
+│   ├── api-docs.yaml
+│   ├── index.php
+├── src/
+│   ├── Cache/
+│   │   ├── MemoryCache.php
+│   ├── Controllers/
+│   │   ├── BookController.php
+│   │   ├── MiscController.php
+│   │   ├── ReadingController.php
+│   │   ├── SystemController.php
+│   ├── Database/
+│   │   ├── Connection.php
+│   ├── Models/
+│   │   ├── Book.php
+│   │   ├── BookQueryBuilder.php
+│   │   ├── BookResponse.php
+│   │   ├── BookStatus.php
+│   │   ├── Misc.php
+│   │   ├── QuoteOfTheDay.php
+│   │   ├── Reading.php
+│   │   ├── Weather.php
+│   │   ├── WordOfTheDay.php
+├── tests/
+│   ├── Integration/
+│   │   ├── ApiEndpointsTest.php
+│   │   ├── BookListEndpointTest.php
+│   │   ├── TodaysBooksEndpointTest.php
+│   ├── Unit/
+│   │   ├── BookStatusTest.php
+│   ├── BaseTestCase.php
+│   ├── TEST_SUMMARY.md
+├── .env.example
+├── .gitignore
+├── API_DOCUMENTATION.md
+├── README.md
+├── apache-vhost.conf
+├── composer.json
+├── composer.lock
+├── export-wiki-consolidated.php
+├── export-wiki.php
+├── generate-docs.php
+├── phpunit.xml
+├── schema.rsywx.sql
+<pre><code></p><p>---</p><p><h1>API Documentation</h1></p><p><h1>图书管理API文档</h1></p><p><h2>概述</h2></p><p>这是一个基于Slim 4框架构建的图书管理API后台系统，提供完整的图书CRUD操作、缓存机制和访问统计功能。</p><p><h2>基础信息</h2></p><p>- **基础URL**: </code>http://your-domain.com/api/v1<code>
+<li>**认证方式**: API Key (通过Header </code>X-API-Key<code> 或查询参数 </code>api_key<code>)</li>
+<li>**响应格式**: JSON</li>
+<li>**字符编码**: UTF-8</p><p><h2>认证</h2></p><p>所有API请求（除了健康检查）都需要提供有效的API Key：</p><p><h3>Header方式</h3></code></pre></li>
+X-API-Key: your-api-key-here
+<pre><code>
+<h3>查询参数方式</h3></code></pre>
+GET /api/v1/books?api_key=your-api-key-here
+<pre><code>
+<h2>通用响应格式</h2></p><p><h3>成功响应</h3></code></pre>json
+{
+    "success": true,
+    "data": {},
+    "cached": false
+}
+<pre><code>
+<h3>错误响应</h3></code></pre>json
+{
+    "success": false,
+    "message": "错误描述"
+}
+<pre><code>
+<h2>API端点</h2></p><p><h3>1. 健康检查</h3></p><p>检查API服务状态（无需认证）。</p><p>**请求**</code></pre>
+GET /health
+<pre><code>
+**响应**</code></pre>json
+{
+    "success": true,
+    "message": "API is running",
+    "timestamp": "2025-01-20 10:30:00"
+}
+<pre><code>
+<h3>2. 获取图书集合状态</h3></p><p>获取图书库的统计信息，包括总数、页数、字数和访问量。</p><p>**请求**</code></pre>
+GET /api/v1/books/status
+<pre><code>
+**查询参数**
+<li></code>refresh<code> (可选): </code>true<code> 强制刷新缓存</p><p>**响应**</code></pre>json</li>
+{
+    "success": true,
+    "data": {
+        "total_books": 2077,
+        "total_pages": 425678,
+        "total_kwords": 89234,
+        "total_visits": 2351070
+    },
+    "cached": true
+}
+<pre><code>
+<h3>3. 获取图书列表</h3></p><p>获取图书列表，支持分页、过滤和排序。</p><p>**请求**</code></pre>
+GET /api/v1/books
+<pre><code>
+**查询参数**
+<li></code>page<code> (可选): 页码，默认为1</li>
+<li></code>limit<code> (可选): 每页数量，默认为20</li>
+<li></code>title<code> (可选): 按标题过滤</li>
+<li></code>author<code> (可选): 按作者过滤</li>
+<li></code>category<code> (可选): 按分类过滤</li>
+<li></code>instock<code> (可选): 按库存状态过滤 (</code>true<code>/</code>false<code>)</li>
+<li></code>order_by<code> (可选): 排序字段 (如: </code>title<code>, </code>author<code>, </code>pubdate<code>)</li>
+<li></code>order_dir<code> (可选): 排序方向 (</code>ASC<code>/</code>DESC<code>)</li>
+<li></code>refresh<code> (可选): </code>true<code> 强制刷新缓存</p><p>**响应**</code></pre>json</li>
+{
+    "success": true,
+    "data": {
+        "books": [
+            {
+                "id": 1,
+                "bookid": "B001",
+                "title": "示例图书",
+                "author": "作者姓名",
+                "region": "中国",
+                "copyrighter": "版权方",
+                "translated": false,
+                "purchase_date": "2024-01-15",
+                "price": "¥29.80",
+                "publication_date": "2023-12-01",
+                "print_date": "2023-12-15",
+                "version": "1",
+                "decoration": "平装",
+                "word_count": "25.6万字",
+                "pages": 320,
+                "isbn": "978-7-111-12345-6",
+                "category": "技术",
+                "online": "Y",
+                "introduction": "图书简介...",
+                "in_stock": true,
+                "location": "A01",
+                "book_age": 1,
+                "reviews": [],
+                "total_visits": 156,
+                "last_visit_time": "2024-01-20 09:30:00",
+                "tags": ["编程", "技术"]
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "limit": 20,
+            "total": 20
+        }
+    },
+    "cached": true
+}
+<pre><code>
+<h3>4. 根据ID获取单个图书</h3></p><p>根据数据库ID获取图书详细信息。</p><p>**请求**</code></pre>
+GET /api/v1/books/{id}
+<pre><code>
+**路径参数**
+<li></code>id<code>: 图书的数据库ID</p><p>**查询参数**</li>
+<li></code>refresh<code> (可选): </code>true<code> 强制刷新缓存</p><p>**响应**</code></pre>json</li>
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "bookid": "B001",
+        "title": "示例图书",
+        // ... 完整的图书信息
+    },
+    "cached": true
+}
+<pre><code>
+<h3>5. 根据BookID获取单个图书</h3></p><p>根据图书编号获取图书详细信息。</p><p>**请求**</code></pre>
+GET /api/v1/books/bookid/{bookid}
+<pre><code>
+**路径参数**
+<li></code>bookid<code>: 图书编号</p><p>**查询参数**</li>
+<li></code>refresh<code> (可选): </code>true<code> 强制刷新缓存</p><p>**响应**</code></pre>json</li>
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "bookid": "B001",
+        "title": "示例图书",
+        // ... 完整的图书信息
+    },
+    "cached": true
+}
+<pre><code>
+<h3>6. 创建新图书</h3></p><p>创建一本新图书。</p><p>**请求**</code></pre>
+POST /api/v1/books
+Content-Type: application/json</p><p>{
+    "bookid": "B002",
+    "title": "新图书标题",
+    "author": "作者姓名",
+    "region": "中国",
+    "translated": false,
+    "purchdate": "2024-01-20",
+    "price": 35.50,
+    "pubdate": "2024-01-01",
+    "printdate": "2024-01-10",
+    "ver": "1",
+    "deco": "平装",
+    "kword": 280000,
+    "page": 350,
+    "isbn": "978-7-111-54321-0",
+    "category": "文学",
+    "intro": "这是一本关于...",
+    "instock": true,
+    "location": "B02"
+}
+<pre><code>
+**响应**</code></pre>json
+{
+    "success": true,
+    "message": "图书创建成功",
+    "data": {
+        "id": 2078,
+        "bookid": "B002",
+        // ... 完整的图书信息
+    }
+}
+<pre><code>
+<h3>7. 更新图书</h3></p><p>更新现有图书信息。</p><p>**请求**</code></pre>
+PUT /api/v1/books/{id}
+Content-Type: application/json</p><p>{
+    "title": "更新后的标题",
+    "price": 39.80,
+    "instock": false
+    // ... 其他需要更新的字段
+}
+<pre><code>
+**响应**</code></pre>json
+{
+    "success": true,
+    "message": "图书更新成功",
+    "data": {
+        "id": 1,
+        "title": "更新后的标题",
+        // ... 完整的图书信息
+    }
+}
+<pre><code>
+<h3>8. 删除图书</h3></p><p>删除指定图书。</p><p>**请求**</code></pre>
+DELETE /api/v1/books/{id}
+<pre><code>
+**响应**</code></pre>json
+{
+    "success": true,
+    "message": "图书删除成功"
+}
+<pre><code>
+<h2>图书实体字段说明</h2></p><p>| 字段名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | integer | 否 | 数据库自增ID |
+| place | integer | 否 | 购买地点ID |
+| publisher | integer | 否 | 出版社ID |
+| bookid | string | 是 | 图书编号（唯一） |
+| title | string | 是 | 图书标题 |
+| author | string | 是 | 作者 |
+| region | string | 是 | 地区 |
+| copyrighter | string | 否 | 版权方 |
+| translated | boolean | 否 | 是否翻译作品 |
+| purchdate | date | 否 | 购买日期 |
+| price | float | 是 | 价格 |
+| pubdate | date | 否 | 出版日期 |
+| printdate | date | 否 | 印刷日期 |
+| ver | string | 是 | 版本 |
+| deco | string | 是 | 装帧方式 |
+| kword | integer | 是 | 字数（千字） |
+| page | integer | 是 | 页数 |
+| isbn | string | 是 | ISBN号码 |
+| category | string | 否 | 分类 |
+| ol | string | 否 | 在线状态 |
+| intro | string | 是 | 简介 |
+| instock | boolean | 是 | 是否有库存 |
+| location | string | 否 | 存放位置 |</p><p><h2>缓存机制</h2></p><p>系统实现了智能缓存机制来优化性能：</p><p><h3>缓存策略</h3>
+<li>**基本图书信息**: 缓存24小时，包括图书的基本属性</li>
+<li>**实时数据**: 不缓存，包括评论、访问统计、最后访问时间</li>
+<li>**列表查询**: 缓存24小时，按查询条件分别缓存</p><p><h3>缓存控制</h3></li>
+<li>使用 </code>refresh=true<code> 参数强制刷新缓存</li>
+<li>创建、更新、删除操作会自动清除相关缓存</li>
+<li>响应中的 </code>cached<code> 字段表示数据是否来自缓存</p><p><h2>访问统计</h2></p><p>系统会自动记录图书访问情况：</li>
+<li>每次获取单个图书详情时会记录访问</li>
+<li>记录访问时间、IP地址等信息</li>
+<li>提供总访问量和最后访问时间</p><p><h2>错误代码</h2></p><p>| HTTP状态码 | 说明 |</li>
+|------------|------|
+| 200 | 请求成功 |
+| 201 | 创建成功 |
+| 400 | 请求参数错误 |
+| 401 | 认证失败 |
+| 404 | 资源不存在 |
+| 500 | 服务器内部错误 |</p><p><h2>使用示例</h2></p><p><h3>获取图书列表（带过滤）</h3></code></pre>bash
+curl -H "X-API-Key: your-api-key" \
+     "http://your-domain.com/api/v1/books?author=张三&category=技术&page=1&limit=10"
+<pre><code>
+<h3>创建新图书</h3></code></pre>bash
+curl -X POST \
+     -H "X-API-Key: your-api-key" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "bookid": "B003",
+       "title": "PHP高级编程",
+       "author": "李四",
+       "region": "中国",
+       "price": 89.00,
+       "page": 500,
+       "kword": 400,
+       "ver": "1",
+       "deco": "精装",
+       "isbn": "978-7-111-99999-9",
+       "intro": "深入学习PHP高级特性",
+       "instock": true
+     }' \
+     "http://your-domain.com/api/v1/books"
+<pre><code>
+<h3>更新图书信息</h3></code></pre>bash
+curl -X PUT \
+     -H "X-API-Key: your-api-key" \
+     -H "Content-Type: application/json" \
+     -d '{"price": 79.00, "instock": false}' \
+     "http://your-domain.com/api/v1/books/1"
+<pre><code>
+<h2>注意事项</h2></p><p>1. **API Key安全**: 请妥善保管API Key，不要在客户端代码中暴露
+2. **数据验证**: 创建和更新图书时会进行数据验证，请确保提供有效数据
+3. **缓存刷新**: 在需要最新数据时使用 </code>refresh=true<code> 参数
+4. **并发访问**: 系统支持并发访问，但建议合理控制请求频率
+5. **数据备份**: 建议定期备份数据库数据</p><p><h2>技术栈</h2></p><p>- **框架**: Slim 4
+<li>**数据库**: MySQL 8.0</li>
+<li>**缓存**: 文件缓存系统</li>
+<li>**认证**: API Key</li>
+<li>**日志**: Monolog（可选）</p><p><h2>版本信息</h2></p><p>- **当前版本**: v1</li>
+<li>**最后更新**: 2025-01-20</li>
+<li>**兼容性**: PHP 8.0+</p><p>---</p><p><h1>Database Schema Information</h1></p><p><h2>Database Tables</h2></p><p>- </code>book_book<code></li>
+<li></code>book_headline<code></li>
+<li></code>book_place<code></li>
+<li></code>book_publisher<code></li>
+<li></code>book_review<code></li>
+<li></code>book_taglist<code></li>
+<li></code>book_visit<code></li>
+<li></code>lakers<code></li>
+<li></code>qotd<code></li>
+<li></code>wotd<code></li>
+<li></code>wpme<code></p><p><h2>Schema File Size</h2></li>
+<li>Size: 10,224 bytes</li>
+<li>Lines: 243</p><p></li>
+---</p><p><h1>Project Dependencies</h1></p><p><h2>Production Dependencies</h2></p><p>- </code>php<code>: >=7.4
+<li></code>slim/slim<code>: ^4.0</li>
+<li></code>slim/psr7<code>: ^1.0</li>
+<li></code>php-di/php-di<code>: ^6.0</li>
+<li></code>monolog/monolog<code>: ^2.0</li>
+<li></code>vlucas/phpdotenv<code>: ^5.0</li>
+<li></code>zircote/swagger-php<code>: ^4.0</p><p><h2>Development Dependencies</h2></p><p>- </code>phpdocumentor/phpdocumentor<code>: ^3.0</li>
+<li></code>phpunit/phpunit<code>: ^9.0</p><p></li>
+---</p><p><h1>Configuration Files</h1></p><p><h2>Environment Configuration</h2>
+</code></pre>bash
+<h1>Database Configuration</h1>
+DB_HOST=localhost
+DB_NAME=rsywx
+DB_USER=root
+DB_PASSWORD=your_password
+DB_CHARSET=utf8mb4</p><p><h1>API Configuration</h1>
+API_KEY=your-secret-api-key-here
+API_VERSION=v1</p><p><h1>Environment</h1>
+APP_ENV=development
+LOG_LEVEL=debug</p><p><h1>Rate Limiting</h1>
+RATE_LIMIT_REQUESTS=100
+RATE_LIMIT_WINDOW=3600
+<pre><code>
+<h2>Apache Virtual Host</h2>
+</code></pre>apache
+<VirtualHost *:80>
+    ServerName api
+    ServerAlias api.yourdomain.com
+    DocumentRoot /home/tr/www/api.rsywx.2025/public
+    
+    <Directory /home/tr/www/api.rsywx.2025/public>
+        AllowOverride All
+        Require all granted
+        
+        # Enable URL rewriting for Slim
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^ index.php [QSA,L]
+    </Directory>
+    
+    # Security headers
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # PHP settings
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value memory_limit 256M
+    
+    # Logging
+    ErrorLog ${APACHE_LOG_DIR}/api_error.log
+    CustomLog ${APACHE_LOG_DIR}/api_access.log combined
+</VirtualHost>
+<pre><code>
+---</p><p><h1>Testing Information</h1></p><p><h2>PHPUnit Configuration</h2></p><p>Configuration file: </code>phpunit.xml<code></p><p><h2>Test Summary</h2></p><p><h1>API Test Summary</h1></p><p>This document summarizes the comprehensive test coverage for the RSYWX Library API.</p><p><h2>Test Statistics</h2>
+<li>**Total Tests**: 44</li>
+<li>**Total Assertions**: 559</li>
+<li>**Test Files**: 3</li>
+<li>**Coverage**: All major endpoints and edge cases</p><p><h2>Test Files</h2></p><p><h3>1. BaseTestCase.php</h3></li>
+<li>Provides common test infrastructure</li>
+<li>Sets up test environment with proper middleware</li>
+<li>Configures all API routes for testing</li>
+<li>Handles database connection gracefully</p><p><h3>2. ApiEndpointsTest.php (25 tests, 321 assertions)</h3></li>
+Tests all the main API endpoints we've developed:</p><p>#### Core Endpoints
+<li>✅ Health endpoint (</code>/health<code>)</li>
+<li>✅ API key authentication (header and query parameter)</li>
+<li>✅ CORS headers validation</p><p>#### Book Status Endpoint (</code>/books/status<code>)</li>
+<li>✅ Returns collection statistics</li>
+<li>✅ Proper data structure validation</li>
+<li>✅ Cache functionality</p><p>#### Book Detail Endpoint (</code>/books/{bookid}<code>)</li>
+<li>✅ Valid book retrieval</li>
+<li>✅ Invalid book handling (404)</li>
+<li>✅ Proper data structure validation</p><p>#### Latest Books Endpoint (</code>/books/latest[/{count}]<code>)</li>
+<li>✅ Default count (1 book)</li>
+<li>✅ Custom count (3 books)</li>
+<li>✅ Proper data structure validation</p><p>#### Random Books Endpoint (</code>/books/random[/{count}]<code>)</li>
+<li>✅ Default count (1 book)</li>
+<li>✅ Custom count (5 books)</li>
+<li>✅ Maximum count limit (50 books)</li>
+<li>✅ Count validation (caps at 50 even if 100 requested)</li>
+<li>✅ Cache refresh functionality</li>
+<li>✅ API key requirement</li>
+<li>✅ Proper data structure validation</p><p>#### Last Visited Books Endpoint (</code>/books/last_visited[/{count}]<code>)</li>
+<li>✅ Default count (1 book)</li>
+<li>✅ Custom count (5 books)</li>
+<li>✅ Maximum count limit (50 books)</li>
+<li>✅ Chronological ordering validation (most recent first)</li>
+<li>✅ Cache refresh functionality</li>
+<li>✅ API key requirement</li>
+<li>✅ Region information validation</p><p>#### Forgotten Books Endpoint (</code>/books/forgotten[/{count}]<code>)</li>
+<li>✅ Default count (1 book)</li>
+<li>✅ Custom count (5 books)</li>
+<li>✅ Maximum count limit (50 books)</li>
+<li>✅ Chronological ordering validation (oldest visit first)</li>
+<li>✅ Days since visit calculation</li>
+<li>✅ Cache refresh functionality</li>
+<li>✅ API key requirement</p><p><h3>3. TodaysBooksEndpointTest.php (15 tests, 220 assertions)</h3></li>
+Comprehensive testing of the "today's books" endpoint:</p><p>#### Basic Functionality
+<li>✅ Default endpoint (</code>/books/today<code>) - returns today's historical books</li>
+<li>✅ Parameterized endpoint (</code>/books/today/{month}/{date}<code>)</li>
+<li>✅ Proper date_info structure validation</li>
+<li>✅ Book data structure validation</p><p>#### Date Validation</li>
+<li>✅ Valid dates (Christmas: 12/25, New Year's: 1/1)</li>
+<li>✅ Leap year support (February 29th)</li>
+<li>✅ Invalid date rejection (February 30th, April 31st)</li>
+<li>✅ Invalid month/day ranges (month 0, 13; day 0, 32)</li>
+<li>✅ Boundary date testing (all month-end dates)</p><p>#### Data Integrity</li>
+<li>✅ Books match requested date (month/day)</li>
+<li>✅ Books are from previous years only</li>
+<li>✅ Years_ago calculation accuracy</li>
+<li>✅ Leap year validation for Feb 29 books</p><p>#### API Features</li>
+<li>✅ Cache functionality and refresh</li>
+<li>✅ API key requirement (header and query)</li>
+<li>✅ Proper error responses (400 for invalid dates)</li>
+<li>✅ CORS headers</p><p>#### Edge Cases</li>
+<li>✅ Leap year date handling (Feb 29)</li>
+<li>✅ Month/day boundary conditions</li>
+<li>✅ Zero values rejection</li>
+<li>✅ Out-of-range values rejection</p><p><h2>Test Coverage Summary</h2></p><p><h3>Endpoints Tested</h3></li>
+1. ✅ </code>/health<code> - Health check
+2. ✅ </code>/api/v1/books/status<code> - Collection statistics
+3. ✅ </code>/api/v1/books/latest[/{count}]<code> - Latest purchased books
+4. ✅ </code>/api/v1/books/random[/{count}]<code> - Random books
+5. ✅ </code>/api/v1/books/last_visited[/{count}]<code> - Recently visited books
+6. ✅ </code>/api/v1/books/forgotten[/{count}]<code> - Forgotten books
+7. ✅ </code>/api/v1/books/today<code> - Today's historical books
+8. ✅ </code>/api/v1/books/today/{month}/{date}<code> - Specific date historical books
+9. ✅ </code>/api/v1/books/{bookid}<code> - Individual book details</p><p><h3>Features Tested</h3>
+<li>✅ Authentication (API key validation)</li>
+<li>✅ CORS headers</li>
+<li>✅ Caching functionality</li>
+<li>✅ Cache refresh mechanism</li>
+<li>✅ Input validation</li>
+<li>✅ Error handling (400, 401, 404, 500)</li>
+<li>✅ Data structure validation</li>
+<li>✅ Date validation and leap year support</li>
+<li>✅ Pagination limits</li>
+<li>✅ Chronological ordering</li>
+<li>✅ Database graceful failure handling</p><p><h3>Data Validation</h3></li>
+<li>✅ Response structure consistency</li>
+<li>✅ Data type validation (integers, strings, booleans)</li>
+<li>✅ Required field presence</li>
+<li>✅ Date format validation</li>
+<li>✅ URL structure validation</li>
+<li>✅ Cache status reporting</p><p><h2>Running Tests</h2></li>
+</code></pre>bash
+<h1>Run all tests</h1>
+php vendor/bin/phpunit tests/ --verbose</p><p><h1>Run specific test file</h1>
+php vendor/bin/phpunit tests/Integration/TodaysBooksEndpointTest.php --verbose
+php vendor/bin/phpunit tests/Integration/ApiEndpointsTest.php --verbose</p><p><h1>Run with coverage (if xdebug enabled)</h1>
+php vendor/bin/phpunit tests/ --coverage-html coverage/
+</code>``</p><p><h2>Test Environment</h2>
+<li>**PHP Version**: 8.3.6</li>
+<li>**PHPUnit Version**: 9.6.23</li>
+<li>**Database**: MySQL (with graceful failure handling)</li>
+<li>**Environment**: Testing mode with test API key</li>
+<li>**Memory Usage**: ~8MB per test run</li>
+<li>**Execution Time**: ~10 seconds for full suite</p><p><h2>Notes</h2></li>
+<li>Tests include database connection error handling</li>
+<li>All tests pass even without database connectivity</li>
+<li>Comprehensive edge case coverage</li>
+<li>Performance validation included</li>
+<li>Security testing (API key requirements)</li>
+<li>CORS compliance verification</li></ul>
+<h2>Test Files Count</h2></p><p>- Total test files: 4</p><p>
+</p></body></html>
